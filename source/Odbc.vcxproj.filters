@@ -18,9 +18,6 @@
     <ClCompile Include="OdbcDataSource.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="pc.h">
-      <Filter>Header Files</Filter>
-    </ClCompile>
     <ClCompile Include="OdbcRow.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
@@ -30,7 +27,10 @@
     <ClCompile Include="Utilities.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="dllmain.cpp">
+    <ClCompile Include="pc.h">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="..\..\Framework\source\dllmain.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

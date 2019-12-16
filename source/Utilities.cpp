@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "Utilities.h"
 #include <sqlext.h>
 

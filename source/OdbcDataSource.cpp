@@ -1,4 +1,3 @@
-#include "stdafx.h"
 #include "OdbcDataSource.h"
 #include "Bindings.h"
 #include "OdbcRow.h"

@@ -1,6 +1,7 @@
 #include <string_view>
 #if _MSC_VER
 	#ifndef __INTELLISENSE__ 
+#define WIN32_LEAN_AND_MEAN
 		#include	<windows.h>
 //		#include <basetsd.h>
 		#include <sqltypes.h>
