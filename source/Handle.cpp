@@ -3,6 +3,7 @@
 #include <sqlext.h>
 #include "Utilities.h"
 
+#define var const auto
 namespace Jde::DB::Odbc
 {
 	HandleEnvironment::HandleEnvironment()
@@ -41,11 +42,11 @@ namespace Jde::DB::Odbc
 			//DBG0( "Leave1 HandleSession::HandleSession()" );
 			if( connectionStringLength>0 )
 			{
-				INFO0_ONCE( (char*)connectionStringResult );
+				INFO0_ONCE( string((char*)connectionStringResult) );
 				//_connectionString = connectionString;
 			}
 			else
-				ERR( "connectionString Length={}", connectionStringLength );
+				ERR( "connectionString Length={}"sv, connectionStringLength );
 		}
 		//DBG0( "Leave HandleSession::HandleSession()" );
 	}
@@ -67,8 +68,8 @@ namespace Jde::DB::Odbc
 	{
 		if( _handle )
 		{
-			if( auto rc=SQLFreeHandle( SQL_HANDLE_STMT, _handle )!=SQL_SUCCESS )
-				DBG( "SQLFreeHandle( SQL_HANDLE_STMT, {} ) returned {}", _handle, rc );
+			if( var rc=SQLFreeHandle( SQL_HANDLE_STMT, _handle )!=SQL_SUCCESS )
+				DBG( "SQLFreeHandle( SQL_HANDLE_STMT, {} ) returned {}"sv, _handle, rc );
 		}
 	}
 }

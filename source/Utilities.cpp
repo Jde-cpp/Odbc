@@ -20,7 +20,7 @@ namespace Jde::DB::Odbc
 		while( SQLGetDiagRec(hType, hHandle, ++iRec, szState, &iError, szMessage, (SQLSMALLINT)(sizeof(szMessage) / sizeof(char)),  &msgLen) == SQL_SUCCESS )
 		{
 			var level = strncmp((char*)szState, "01004", 5) ? ELogLevel::Error : ELogLevel::Debug;
-			LOG( level, "[{:<5}] {} {}", szState, szMessage, iError );
+			LOG( level, "[{:<5}] {} {}"sv, szState, szMessage, iError );
 		}
 
 	}

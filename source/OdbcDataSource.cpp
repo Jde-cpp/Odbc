@@ -82,7 +82,7 @@ namespace Jde::DB::Odbc
 						break;
 					if( !pResultFunction )
 					{
-						WARN( "{} is returning results, but no function to handle.", sql );
+						WARN( "{} is returning results, but no function to handle."sv, sql );
 						break;
 					}
 					row.Reset();
