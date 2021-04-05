@@ -6,7 +6,7 @@ namespace Jde::DB::Odbc
 {
 	struct OdbcRow : public IRow
 	{
-		OdbcRow( const vector<sp<Binding>>& bindings );
+		OdbcRow( const vector<up<Binding>>& bindings );
 		void Reset()const{_index=0;}
 
 		DataValue operator[]( uint value )const override;
@@ -23,6 +23,6 @@ namespace Jde::DB::Odbc
 		uint GetUInt( uint position )const override;
 		std::optional<uint> GetUIntOpt( uint position )const override;
 	private:
-		const vector<sp<Binding>>& _bindings;
+		const vector<up<Binding>>& _bindings;
 	};
 }

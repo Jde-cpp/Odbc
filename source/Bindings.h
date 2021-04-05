@@ -1,5 +1,6 @@
 #pragma once
 #include "../../Framework/source/db/DataType.h"
+#include "../../Framework/source/db/DBException.h"
 
 namespace Jde::DB::Odbc
 {
@@ -7,20 +8,22 @@ namespace Jde::DB::Odbc
 #pragma warning (disable: 4716)
 	struct Binding
 	{
-		Binding( SQLSMALLINT type, SQLSMALLINT cType ):
+		Binding( SQLSMALLINT type, SQLSMALLINT cType, SQLLEN output=0 ):
 			DBType{ type },
-			CodeType{cType}
+			CodeType{cType},
+			Output{output}
 		{}
-		static sp<Binding> GetBinding( SQLSMALLINT type );
-		static sp<Binding> Create( DataValue parameter );
+		virtual ~Binding()=default;
+		static up<Binding> GetBinding( SQLSMALLINT type );
+		static up<Binding> Create( DataValue parameter );
 		
 		virtual void* Data()noexcept=0;
 		virtual DataValue GetDataValue()const=0;
 		[[noreturn]] virtual bool GetBit()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType) ); }
-		[[noreturn]] virtual const std::string to_string()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "to_string", DBType, CodeType) ); }
+		[[noreturn]] virtual const std::string to_string()const{ THROW( DBException("to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
 		[[noreturn]] virtual int64_t GetInt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetInt", DBType, CodeType) ); }
 		[[noreturn]] virtual int32_t GetInt32()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetInt32", DBType, CodeType) ); }
-		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetIntOpt", DBType, CodeType) ); }
+		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={} {}", "GetIntOpt", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
 		[[noreturn]] virtual double GetDouble()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetDouble", DBType, CodeType) ); }
 		virtual float GetFloat()const{ return static_cast<float>( GetDouble() ); }
 		[[noreturn]] virtual std::optional<double> GetDoubleOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetDoubleOpt", DBType, CodeType) ); }
@@ -31,30 +34,33 @@ namespace Jde::DB::Odbc
 		[[noreturn]] virtual std::optional<uint> GetUIntOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={} - {}", "GetUIntOpt", DBType, CodeType, GetTypeName<decltype(this)>() ) ); };
 		bool IsNull()const{ return Output==SQL_NULL_DATA; }
 		virtual SQLULEN Size()const noexcept{return 0;}
+		virtual SQLSMALLINT DecimalDigits()const noexcept{return 0;}
 		virtual SQLLEN BufferLength()const noexcept{return 0;}
 		SQLSMALLINT DBType{0};
 		SQLSMALLINT CodeType{0};
-		SQLLEN Output{0};
+		SQLLEN Output;
 	};
 #pragma warning( pop )
 
 	struct BindingNull : public Binding
 	{
-		BindingNull( SQLSMALLINT type=SQL_UNKNOWN_TYPE ):
-			Binding{ type, SQL_C_CHAR }
+		BindingNull( SQLSMALLINT type=SQL_VARCHAR ):
+			Binding{ type, SQL_C_CHAR, SQL_NULL_DATA }
 		{}
 		void* Data()noexcept override{ return nullptr; }
 		DB::DataValue GetDataValue()const override{ return DataValue{nullptr}; }
+		//SQLLEN BufferLength()const noexcept override{return SQL_NTS;}
+		//char _dummyValue={0};
 	};
 
-	struct BindingString : public Binding
+	struct BindingString final: public Binding
 	{
-		BindingString( SQLSMALLINT type, SQLLEN size ):Binding{ type, SQL_C_CHAR }{ _buffer.reserve( size ); }
-		BindingString( const string& value ):Binding{ SQL_VARCHAR, SQL_C_CHAR },_buffer( value.begin(), value.end() ){}
-		BindingString( const string_view& value ):Binding{ SQL_VARCHAR, SQL_C_CHAR },_buffer( value.begin(), value.end() ){Output = value.size();}
+		BindingString( SQLSMALLINT type, SQLLEN size ):Binding{ type, SQL_C_CHAR, size }{ _buffer.reserve( size ); }
+		BindingString( const string& value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
+		BindingString( const string_view& value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
 		void* Data()noexcept override{ return _buffer.data(); }
 		DB::DataValue GetDataValue()const override{ return DataValue{to_string()}; }
-		const std::string to_string()const override{ return string( _buffer.data() ); }
+		const std::string to_string()const override{ return Output==-1 ? string{} : string{ _buffer.data(), _buffer.data()+Output }; }
 
 		SQLLEN BufferLength()const noexcept override{return _buffer.size();}
 		SQLULEN Size()const noexcept override{ return _buffer.size(); }
@@ -64,11 +70,14 @@ namespace Jde::DB::Odbc
 
 	struct BindingBit : public Binding
 	{
-		BindingBit( SQLSMALLINT type ):	Binding{ type, SQL_C_BIT }{}
+		BindingBit():BindingBit{ (SQLSMALLINT)SQL_BIT }{}//-7
+		BindingBit( SQLSMALLINT type ):Binding{ type, SQL_C_BIT }{}
 		BindingBit( bool value ): Binding{ SQL_CHAR, SQL_C_BIT },_data{value ? '\1' : '\0'}{}
 		void* Data()noexcept override{ return &_data; }
 		DataValue GetDataValue()const override{ return DataValue{_data!=0}; }
 		bool GetBit()const override{ return _data!=0; }
+		int64_t GetInt()const override{ return static_cast<int64_t>(_data); }
+		const std::string to_string()const override{ return _data ? "true" : "false"; }
 	private:
 		char _data;
 	};
@@ -146,12 +155,17 @@ namespace Jde::DB::Odbc
 	};
 	
 	struct BindingDateTime : public Binding
-	{
-		BindingDateTime( SQLSMALLINT type=SQL_DATETIME ):Binding{ type, SQL_C_TYPE_TIMESTAMP }{}
+	{//{ SQL_DATETIME, SQL_C_TYPE_TIMESTAMP }
+		//BindingDateTime( SQLSMALLINT type=SQL_DATETIME ):Binding{ type, SQL_C_TYPE_TIMESTAMP }{}
+		BindingDateTime( SQLSMALLINT type=SQL_TYPE_TIMESTAMP ):Binding{ type, SQL_C_TIMESTAMP, sizeof(SQL_TIMESTAMP_STRUCT) }{}
+		
 		BindingDateTime( const optional<DBDateTime>& value );
 
 		void* Data()noexcept override{ return &_data; }
 		DataValue GetDataValue()const override{ return IsNull() ? DataValue{nullptr} : DataValue{GetDateTimeOpt()}; }
+		SQLLEN BufferLength()const noexcept override{ return sizeof(_data); }
+		SQLULEN Size()const noexcept override{ return 27; }//https://wezfurlong.org/blog/2005/Nov/calling-sqlbindparameter-to-bind-sql-timestamp-struct-as-sql-c-type-timestamp-avoiding-a-datetime-overflow/
+		SQLSMALLINT DecimalDigits()const noexcept{return 7;}
 		DBDateTime GetDateTime()const override
 		{ 
 			return IsNull() ? DBDateTime() : Jde::DateTime( _data.year, (uint8)_data.month, (uint8)_data.day, (uint8)_data.hour, (uint8)_data.minute, (uint8)_data.second, Duration(_data.fraction) ).GetTimePoint();
@@ -163,7 +177,7 @@ namespace Jde::DB::Odbc
 				value = GetDateTime();
 			return value;
 		}
-	private:
+	//private:
 		SQL_TIMESTAMP_STRUCT _data;
 	};
 
@@ -210,8 +224,10 @@ namespace Jde::DB::Odbc
 		void* Data()noexcept override{ return &_data; }
 		DataValue GetDataValue()const override{ return DataValue{_data}; }
 		uint GetUInt()const noexcept override{ return static_cast<uint>(_data); }
+		_int GetInt()const noexcept override{ return static_cast<_int>(_data); }
+		optional<_int> GetIntOpt()const noexcept override{ std::optional<_int> value; if( !IsNull() ) value = GetInt(); return value; }
 		double GetDouble()const override{ return _data; }
-		std::optional<double> GetDoubleOpt()const{ std::optional<double> value; if( !IsNull() ) value = GetDouble();	return value; }
+		std::optional<double> GetDoubleOpt()const{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
 	private:
 		int16_t _data;
 	};
@@ -220,57 +236,60 @@ namespace Jde::DB::Odbc
 	{
 		BindingUInt8():Binding{ SQL_TINYINT, SQL_C_TINYINT }{}
 		BindingUInt8( uint8_t value ): Binding{ SQL_TINYINT, SQL_C_TINYINT },_data{value}{}
-		//BindingInt16( const Decimal2& value ): Binding{ SQL_TINYINT, SQL_C_SSHORT },_data{ (double)value }{}
-		//BindingInt16( const optional<double>& value ): Binding{ SQL_TINYINT, SQL_C_SSHORT },_data{value.has_value() ? value.value() : 0.0}{ if( !value.has_value() ) Output=SQL_NULL_DATA; }
 
 		void* Data()noexcept override{ return &_data; }
 		DataValue GetDataValue()const override{ return DataValue{_data}; }
 
 		uint GetUInt()const noexcept override{ return static_cast<uint>(_data); }
+		std::optional<_int> GetIntOpt()const override{ std::optional<_int> value; if( !IsNull() ) value = GetInt(); return value; }
+		_int GetInt()const override{ return static_cast<uint>(_data); }
 		double GetDouble()const override{ return _data; }
 		std::optional<double> GetDoubleOpt()const{ std::optional<double> value; if( !IsNull() ) value = GetDouble();	return value; }
 	private:
 		uint8_t _data;
 	};
 
-	inline sp<Binding> Binding::GetBinding( SQLSMALLINT type )
+	inline up<Binding> Binding::GetBinding( SQLSMALLINT type )
 	{
-		sp<Binding> pBinding;
+		up<Binding> pBinding;
 		switch( type )
 		{
+		case SQL_BIT:
+			pBinding = make_unique<BindingBit>();
+			break;
 		case SQL_TINYINT:
-			pBinding = make_shared<BindingUInt8>();
+			pBinding = make_unique<BindingUInt8>();
 			break;
 		case SQL_INTEGER:
-			pBinding = make_shared<BindingInt32>( type );
+			pBinding = make_unique<BindingInt32>( type );
 			break;
 		case SQL_DECIMAL:
-			pBinding = make_shared<BindingDouble>( type );
+			pBinding = make_unique<BindingDouble>( type );
 		break;
 		case SQL_SMALLINT:
-			pBinding = make_shared<BindingInt16>();
+			pBinding = make_unique<BindingInt16>();
 			break;
 		case SQL_FLOAT:
-			pBinding = make_shared<BindingFloat>( type );
+			pBinding = make_unique<BindingFloat>( type );
 			break;
 		case SQL_REAL:
-			pBinding = make_shared<BindingDouble>( type );
+			pBinding = make_unique<BindingDouble>( type );
 			break;
 		case SQL_DOUBLE:
-			pBinding = make_shared<BindingDouble>( type );
+			pBinding = make_unique<BindingDouble>( type );
 			break;
 		case SQL_DATETIME:
-			pBinding = make_shared<BindingDateTime>( type);
+			pBinding = make_unique<BindingDateTime>( type);
 			break;
 		case SQL_BIGINT:
-			pBinding = make_shared<BindingInt>( type );
+			pBinding = make_unique<BindingInt>( type );
 			break;
 		case SQL_TYPE_TIMESTAMP:
-			pBinding = make_shared<BindingTimeStamp>( type );
+			pBinding = make_unique<BindingTimeStamp>( type );
 			break;
 			//SQL_C_UBIGINT
 		//case SQL_UBIGINT:
-		//	pBinding = make_shared<BindingType<uint64_t>>( type, SQL_C_UBIGINT );
+		//	pBinding = make_unique<BindingType<uint64_t>>( type, SQL_C_UBIGINT );
 		//	break;
 		default:
 			THROW( DBException("Type '{}' is not implemented.", type) );
@@ -278,51 +297,52 @@ namespace Jde::DB::Odbc
 		return pBinding;
 	}
 	using std::get;
-	inline sp<Binding> Binding::Create( DataValue parameter )
+	inline up<Binding> Binding::Create( DataValue parameter )
 	{
-		sp<Binding> pBinding;
+		up<Binding> pBinding;
 		switch( (EDataValue)parameter.index() )
 		{
 		case EDataValue::Null:
-			pBinding = make_shared<BindingNull>();
+			pBinding = make_unique<BindingNull>();
 		break;
 		case EDataValue::String:
-			pBinding = make_shared<BindingString>( get<string>(parameter) );
+			pBinding = make_unique<BindingString>( get<string>(parameter) );
 		break;
 		case EDataValue::StringView:
-			pBinding = make_shared<BindingString>( get<string_view>(parameter) );
+			pBinding = make_unique<BindingString>( get<string_view>(parameter) );
 		break;
 		case EDataValue::StringPtr:
-			pBinding = make_shared<BindingString>( *get<sp<string>>(parameter) );
+			pBinding = make_unique<BindingString>( *get<sp<string>>(parameter) );
 		break;
 		case EDataValue::Bool:
-			pBinding = make_shared<BindingBit>( get<bool>(parameter) );
+			pBinding = make_unique<BindingBit>( get<bool>(parameter) );
 		break;
 		case EDataValue::Int:
-			pBinding = make_shared<BindingInt32>( get<int>(parameter) );
+			pBinding = make_unique<BindingInt32>( get<int>(parameter) );
 		break;
 		case EDataValue::Int64:
-			pBinding = make_shared<BindingInt>( get<_int>(parameter) );
+			pBinding = make_unique<BindingInt>( get<_int>(parameter) );
 		break;
 		case EDataValue::Uint:
-			pBinding = make_shared<BindingUInt>( get<uint>(parameter) );
+			pBinding = make_unique<BindingInt>( (_int)get<uint>(parameter) );
 		break;
 		case EDataValue::Decimal2:
-			pBinding = make_shared<BindingDouble>( get<Decimal2>(parameter) );
+			pBinding = make_unique<BindingDouble>( get<Decimal2>(parameter) );
 		break;
 		case EDataValue::Double:
-			pBinding = make_shared<BindingDouble>( get<double>(parameter) );
+			pBinding = make_unique<BindingDouble>( get<double>(parameter) );
 		break;
 		case EDataValue::DoubleOptional:
-			pBinding = make_shared<BindingDouble>( get<optional<double>>(parameter) );
+			pBinding = make_unique<BindingDouble>( get<optional<double>>(parameter) );
 		break;
 		case EDataValue::DateOptional:
-			pBinding = make_shared<BindingDateTime>( get<optional<DBDateTime>>(parameter) );
+			pBinding = make_unique<BindingDateTime>( get<optional<DBDateTime>>(parameter) );
 		break;
 		}
 		return pBinding;
 	}
-	inline BindingDateTime::BindingDateTime( const optional<DBDateTime>& value ): Binding{ SQL_DATETIME, SQL_C_TYPE_TIMESTAMP }
+	inline BindingDateTime::BindingDateTime( const optional<DBDateTime>& value ): 
+		BindingDateTime{}
 	{
 		if( !value.has_value() )
 			Output = SQL_NULL_DATA;
@@ -335,7 +355,9 @@ namespace Jde::DB::Odbc
 			_data.hour = date.Hour();
 			_data.minute = date.Minute();
 			_data.second = date.Second();
-			_data.fraction = date.Nanos();
+			//_data.fraction = date.Nanos();
+			//_data.fraction = (date.Nanos()+500)/1000*1000;//7 digits - [22008] [Microsoft][ODBC Driver 17 for SQL Server]Datetime field overflow. Fractional second precision exceeds the scale specified in the parameter binding. 
+			_data.fraction = 0;
 		}
 	}
 }

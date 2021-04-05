@@ -3,7 +3,7 @@
 
 namespace Jde::DB::Odbc
 {
-	OdbcRow::OdbcRow( const vector<sp<Binding>>& bindings ):
+	OdbcRow::OdbcRow( const vector<up<Binding>>& bindings ):
 		_bindings{bindings}
 	{}
 	

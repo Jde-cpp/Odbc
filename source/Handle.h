@@ -11,14 +11,17 @@ namespace Jde::DB::Odbc
 		function<void(const T&)> _destructor;
 	};
 */
-	struct HandleEnvironment : boost::noncopyable
+	//template<typename T>
+	//using SharedHandle = std::shared_ptr<T,std::function<void(T)>>;
+
+	struct HandleEnvironment final: boost::noncopyable
 	{
 		HandleEnvironment();
-		~HandleEnvironment();
+//		~HandleEnvironment();
 
-		operator SQLHENV()const noexcept{ return _handle; }
+		operator SQLHENV()const noexcept{ return _handle.get(); }
 	private:
-		SQLHENV _handle{nullptr};
+		static std::shared_ptr<void> _handle;
 	};
 
 	struct HandleSession : boost::noncopyable
@@ -32,8 +35,8 @@ namespace Jde::DB::Odbc
 		static mutex _mutex;
 
 		HDBC _handle{nullptr};
-		lock_guard<mutex> _lock;
-		//string _connectionString;
+		up<lock_guard<mutex>> _pLock;
+		uint i;
 		HandleEnvironment _env;
 	};
 
