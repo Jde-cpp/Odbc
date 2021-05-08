@@ -116,6 +116,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <ShowProgress>NotSet</ShowProgress>
+      <AdditionalDependencies>Onecore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
@@ -142,6 +143,7 @@
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <AdditionalLibraryDirectories>$(OutDir)</AdditionalLibraryDirectories>
       <ShowProgress>NotSet</ShowProgress>
+      <AdditionalDependencies>Onecore.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

@@ -13,7 +13,7 @@ namespace Jde::DB::MsSql
 		if( schema.empty() )
 			schema = "dbo"sv;/*_pDataSource->Catalog( MsSql::Sql::CatalogSql )*/;
 		auto pTables = make_shared<map<string,Table>>();
-		//std::function<void(const string& name, const string& COLUMN_NAME, int ordinalPosition, const string& dflt, int isNullable, const string& type, int maxLength, int isIdentity, int isId, int NumericPrecision, int NumericScale)>
+		//std::function<void(str name, str COLUMN_NAME, int ordinalPosition, str dflt, int isNullable, str type, int maxLength, int isIdentity, int isId, int NumericPrecision, int NumericScale)>
 		auto result2 = [&]( sv tableName, sv name, _int ordinalPosition, sv dflt, sv isNullable, sv type, optional<_int> maxLength, _int isIdentity, _int isId, optional<_int> numericPrecision, optional<_int> numericScale )
 		{
 			auto& table = pTables->emplace( tableName, Table{schema,tableName} ).first->second;
@@ -49,14 +49,14 @@ namespace Jde::DB::MsSql
 			schema = "dbo"sv;// _pDataSource->Catalog( MsSql::Sql::CatalogSql );
 
 		vector<Index> indexes;
-		//std::function<void(const string& indexName, const string& tableName, bool unique, const string& columnName, bool primaryKey)>
+		//std::function<void(str indexName, str tableName, bool unique, str columnName, bool primaryKey)>
 		auto result = [&]( const IRow& row )
 		{
 			uint i=0;
 			var tableName = row.GetString(i++); var indexName = row.GetString(i++); var columnName = row.GetString(i++); var unique = row.GetBit(i++)==0;
 
 			//var ordinal = row.GetUInt(i++); var dflt = row.GetString(i++);  //var primaryKey = row.GetBit(i);
-			vector<string>* pColumns;
+			vector<CIString>* pColumns;
 			auto pExisting = std::find_if( indexes.begin(), indexes.end(), [&](auto index){ return index.Name==indexName && index.TableName==tableName; } );
 			if( pExisting==indexes.end() )
 			{

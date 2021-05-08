@@ -1,13 +1,14 @@
 #include "Utilities.h"
 #include <sqlext.h>
 #include "../../Framework/source/db/DBException.h"
+#include "../../Framework/source/log/Logging.h"
 
 
 #define var const auto
 
 namespace Jde::DB::Odbc
 {
-	void HandleDiagnosticRecord( string_view functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode )
+	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode )
 	{
 		if( retCode==SQL_INVALID_HANDLE )
 			THROW( DBException("({}) {} - Invalid handle {:x}", functionName, hType, retCode) );

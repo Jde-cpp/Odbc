@@ -13,7 +13,7 @@ namespace Jde::DB::Odbc
 		return _bindings[position]->GetDataValue();
 	}
 	bool OdbcRow::GetBit( uint position )const{ ASSERT( position<_bindings.size() ); return _bindings[position]->GetBit(); }
-	const std::string OdbcRow::GetString( uint position )const{ ASSERT( position<_bindings.size() ); return _bindings[position]->to_string(); }
+	std::string OdbcRow::GetString( uint position )const{ ASSERT( position<_bindings.size() ); return _bindings[position]->to_string(); }
 	int64_t OdbcRow::GetInt( uint position )const{ ASSERT( position<_bindings.size() ); return _bindings[position]->GetInt(); }
 	int32_t OdbcRow::GetInt32( uint position )const{ ASSERT( position<_bindings.size() ); return _bindings[position]->GetInt32(); }
 	std::optional<_int> OdbcRow::GetIntOpt( uint position )const{ ASSERT( position<_bindings.size() ); return _bindings[position]->GetIntOpt(); }

@@ -41,22 +41,22 @@ namespace Jde::DB::Odbc
 		return bindings;
 	}
 
-	uint OdbcDataSource::Execute( string_view sql )noexcept(false){ return Select( sql, nullptr, nullptr, true ); }
-	uint OdbcDataSource::Execute( string_view sql, const std::vector<DataValue>& parameters, bool log)noexcept(false){ return Execute(sql, &parameters, nullptr, false, log); }
+	uint OdbcDataSource::Execute( sv sql )noexcept(false){ return Select( sql, nullptr, nullptr, true ); }
+	uint OdbcDataSource::Execute( sv sql, const std::vector<DataValue>& parameters, bool log)noexcept(false){ return Execute(sql, &parameters, nullptr, false, log); }
 	uint OdbcDataSource::Execute( sv sql, const std::vector<DataValue>* pParameters, std::function<void(const IRow&)>* f, bool isStoredProc, bool log )noexcept(false){ return Select( sql, f, pParameters, log ); }
 
-	//uint OdbcDataSource::Execute(string_view sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log)noexcept(false){ return Query(sql, log, &f, &parameters); }
-	uint OdbcDataSource::ExecuteProc( string_view sql, const std::vector<DataValue>& parameters, bool log )noexcept(false){ return Select( format( "{{call {} }}", sql), nullptr, &parameters, log); }
-	uint OdbcDataSource::ExecuteProc( string_view sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log )noexcept(false){ return Select(format( "{{call {} }}", sql), f, &parameters, log); }
-	//void OdbcDataSource::Select(string_view sql, std::function<void(const IRow&)> f, const std::vector<DataValue>& values, bool log)noexcept(false){ Query( sql, log, &f, &values ); }
-	//void OdbcDataSource::Select(string_view sql, std::function<void(const IRow&)> f )noexcept(false){ Query( sql, false, &f ); }
+	//uint OdbcDataSource::Execute(sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log)noexcept(false){ return Query(sql, log, &f, &parameters); }
+	uint OdbcDataSource::ExecuteProc( sv sql, const std::vector<DataValue>& parameters, bool log )noexcept(false){ return Select( format( "{{call {} }}", sql), nullptr, &parameters, log); }
+	uint OdbcDataSource::ExecuteProc( sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log )noexcept(false){ return Select(format( "{{call {} }}", sql), f, &parameters, log); }
+	//void OdbcDataSource::Select(sv sql, std::function<void(const IRow&)> f, const std::vector<DataValue>& values, bool log)noexcept(false){ Query( sql, log, &f, &values ); }
+	//void OdbcDataSource::Select(sv sql, std::function<void(const IRow&)> f )noexcept(false){ Query( sql, false, &f ); }
 
 	sp<ISchemaProc> OdbcDataSource::SchemaProc()noexcept
 	{
 		return make_shared<MsSql::MsSqlSchemaProc>( shared_from_this() );
 		//return {};
 	}
-	uint OdbcDataSource::Select( string_view sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* pParameters, bool log )noexcept(false)
+	uint OdbcDataSource::Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* pParameters, bool log )noexcept(false)
 	{
 		HandleStatement statement{ ConnectionString };
 		vector<SQLUSMALLINT> paramStatusArray;

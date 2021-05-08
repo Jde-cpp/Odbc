@@ -13,10 +13,10 @@ namespace MsSql
 		MsSqlSchemaProc( sp<IDataSource> pDataSource ):
 			ISchemaProc{ pDataSource }
 		{}
-		MapPtr<string,Table> LoadTables( string_view catalog )noexcept(false) override;
-		DataType ToDataType( string_view name )noexcept override;
+		MapPtr<string,Table> LoadTables( sv catalog )noexcept(false) override;
+		DataType ToDataType( sv name )noexcept override;
 		vector<Index> LoadIndexes( sv schema, sv tableName )noexcept(false) override;
 		flat_map<string,ForeignKey> LoadForeignKeys( sv catalog )noexcept(false) override;
-		flat_map<string,Procedure> LoadProcs( string_view catalog={} )noexcept(false) override;
+		flat_map<string,Procedure> LoadProcs( sv catalog={} )noexcept(false) override;
 	};
 }}

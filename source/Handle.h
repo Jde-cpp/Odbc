@@ -27,7 +27,7 @@ namespace Jde::DB::Odbc
 	struct HandleSession : boost::noncopyable
 	{
 		//HandleSession( const HandleEnvironment& env );
-		HandleSession( string_view connectionString );
+		HandleSession( sv connectionString );
 		~HandleSession();
 		operator HDBC()const noexcept{ return _handle; }
 	private:
@@ -43,7 +43,7 @@ namespace Jde::DB::Odbc
 	struct HandleStatement : boost::noncopyable
 	{
 		//HandleStatement( const HandleSession& env );
-		HandleStatement( string_view connectionString );
+		HandleStatement( sv connectionString );
 		~HandleStatement();
 		operator SQLHSTMT()const noexcept{ return _handle; }
 	private:

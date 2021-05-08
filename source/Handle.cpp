@@ -1,6 +1,7 @@
 #include "Handle.h"
 #include <sql.h>
 #include <sqlext.h>
+#include "../../Framework/source/log/Logging.h"
 #include "../../Framework/source/db/DBException.h"
 #include "Utilities.h"
 
@@ -41,7 +42,7 @@ namespace Jde::DB::Odbc
 	HDBC HandleSession::s_handle{nullptr};
 	mutex HandleSession::_mutex;
 	atomic<uint> index=0;
-	HandleSession::HandleSession( string_view connectionString )//://const HandleEnvironment& env
+	HandleSession::HandleSession( sv connectionString )//://const HandleEnvironment& env
 		//_lock(_mutex)
 	{
 		//i = ++index;
@@ -77,7 +78,7 @@ namespace Jde::DB::Odbc
 		//DBG( "HandleSession::~HandleSession({})"sv, i );
 	}
 
-	HandleStatement::HandleStatement( string_view connectionString ):
+	HandleStatement::HandleStatement( sv connectionString ):
 		_session{ connectionString }
 	{
 		CALL( _session, SQL_HANDLE_DBC, SQLAllocHandle(SQL_HANDLE_STMT, _session, &_handle), "SQLAllocHandle" );

@@ -11,7 +11,8 @@ namespace Jde::DB::Odbc
 
 		DataValue operator[]( uint value )const override;
 		bool GetBit( uint position )const override;
-		const std::string GetString( uint position )const override;
+		std::string GetString( uint position )const override;
+		CIString GetCIString( uint i )const override{ return CIString{GetString(i)}; }
 		int64_t GetInt( uint position )const override;
 		int32_t GetInt32( uint position )const override;
 		std::optional<_int> GetIntOpt( uint position )const override;

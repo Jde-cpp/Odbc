@@ -56,8 +56,8 @@ namespace Jde::DB::Odbc
 	struct BindingString final: public Binding
 	{
 		BindingString( SQLSMALLINT type, SQLLEN size ):Binding{ type, SQL_C_CHAR, size }{ _buffer.reserve( size ); }
-		BindingString( const string& value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
-		BindingString( const string_view& value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
+		BindingString( str value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
+		BindingString( sv value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
 		void* Data()noexcept override{ return _buffer.data(); }
 		DB::DataValue GetDataValue()const override{ return DataValue{to_string()}; }
 		const std::string to_string()const override{ return Output==-1 ? string{} : string{ _buffer.data(), _buffer.data()+Output }; }
@@ -309,7 +309,7 @@ namespace Jde::DB::Odbc
 			pBinding = make_unique<BindingString>( get<string>(parameter) );
 		break;
 		case EDataValue::StringView:
-			pBinding = make_unique<BindingString>( get<string_view>(parameter) );
+			pBinding = make_unique<BindingString>( get<sv>(parameter) );
 		break;
 		case EDataValue::StringPtr:
 			pBinding = make_unique<BindingString>( *get<sp<string>>(parameter) );
