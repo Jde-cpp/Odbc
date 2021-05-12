@@ -1,6 +1,6 @@
 #include "MsSqlSchemaProc.h"
+#include <jde/Str.h>
 #include "../../../Framework/source/db/Row.h"
-#include "../../../Framework/source/StringUtilities.h"
 #include "MsSqlStatements.h"
 #include "../OdbcDataSource.h"
 #define var const auto
@@ -111,13 +111,13 @@ namespace Jde::DB::MsSql
 			type=DataType::SmallFloat;
 		else if( typeName=="int" )
 			type = DataType::Int;
-		else if( StringUtilities::StartsWith(typeName, "bigint") )
+		else if( Str::StartsWith(typeName, "bigint") )
 			type=DataType::Long;
 		else if( typeName=="nvarchar" )
 			type=DataType::VarWChar;
 		else if(typeName=="nchar")
 			type=DataType::WChar;
-		else if(StringUtilities::StartsWith(typeName, "smallint"))
+		else if( Str::StartsWith(typeName, "smallint") )
 			type=DataType::Int16;
 		else if(typeName=="tinyint")
 			type=DataType::Int8;
@@ -127,7 +127,7 @@ namespace Jde::DB::MsSql
 			type=DataType::Guid;
 		else if(typeName=="varbinary")
 			type=DataType::VarBinary;
-		else if( StringUtilities::StartsWithInsensitive(typeName, "varchar") )
+		else if( Str::StartsWithInsensitive(typeName, "varchar") )
 			type=DataType::VarChar;
 		else if(typeName=="ntext")
 			type=DataType::NText;
@@ -137,11 +137,11 @@ namespace Jde::DB::MsSql
 			type=DataType::Char;
 		else if(typeName=="image")
 			type=DataType::Image;
-		else if(StringUtilities::StartsWith(typeName, "bit") )
+		else if(Str::StartsWith(typeName, "bit") )
 			type=DataType::Bit;
-		else if( StringUtilities::StartsWith(typeName, "binary") )
+		else if( Str::StartsWith(typeName, "binary") )
 			type=DataType::Binary;
-		else if(StringUtilities::StartsWith(typeName, "decimal") )
+		else if( Str::StartsWith(typeName, "decimal") )
 			type=DataType::Decimal;
 		else if(typeName=="numeric")
 			type=DataType::Numeric;

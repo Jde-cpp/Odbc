@@ -1,5 +1,5 @@
 #pragma once
-#include "../../framework/source/TypeDefs.h"
+#include <jde/TypeDefs.h>
 
 #include <sstream>
 

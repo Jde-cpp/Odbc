@@ -1,5 +1,5 @@
 #include "OdbcRow.h"
-
+#include <jde/Assert.h>
 
 namespace Jde::DB::Odbc
 {

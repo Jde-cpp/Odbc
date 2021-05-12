@@ -1,7 +1,7 @@
 #include "Handle.h"
 #include <sql.h>
 #include <sqlext.h>
-#include "../../Framework/source/log/Logging.h"
+#include <jde/Log.h>
 #include "../../Framework/source/db/DBException.h"
 #include "Utilities.h"
 

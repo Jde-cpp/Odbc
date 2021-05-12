@@ -1,7 +1,7 @@
 #include "Utilities.h"
 #include <sqlext.h>
 #include "../../Framework/source/db/DBException.h"
-#include "../../Framework/source/log/Logging.h"
+#include <jde/Log.h>
 
 
 #define var const auto
