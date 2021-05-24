@@ -8,7 +8,7 @@
 
 namespace Jde::DB::Odbc
 {
-	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode )
+	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode )noexcept(false)
 	{
 		if( retCode==SQL_INVALID_HANDLE )
 			THROW( DBException("({}) {} - Invalid handle {:x}", functionName, hType, retCode) );
@@ -26,7 +26,11 @@ namespace Jde::DB::Odbc
 			if( strncmp((char*)szState, "01000", SQL_SQLSTATE_SIZE)==0  )
 				INFO_ONCE( format("[{:<5}] {} {}"sv, szState, szMessage, iError) );
 			else
+			{
 				LOGX( level, "[{:<5}] {} {}"sv, szState, szMessage, iError );
+				if( functionName=="SQLDriverConnect" && level==ELogLevel::Error )
+					THROW( DBException("[{:<5}] {} {}"sv, szState, szMessage, iError) );
+			}
 		}
 
 	}

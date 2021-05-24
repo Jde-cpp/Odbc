@@ -42,7 +42,7 @@ namespace Jde::DB::Odbc
 	HDBC HandleSession::s_handle{nullptr};
 	mutex HandleSession::_mutex;
 	atomic<uint> index=0;
-	HandleSession::HandleSession( sv connectionString )//://const HandleEnvironment& env
+	HandleSession::HandleSession( sv connectionString )noexcept(false)//://const HandleEnvironment& env
 		//_lock(_mutex)
 	{
 		//i = ++index;
@@ -78,7 +78,7 @@ namespace Jde::DB::Odbc
 		//DBG( "HandleSession::~HandleSession({})"sv, i );
 	}
 
-	HandleStatement::HandleStatement( sv connectionString ):
+	HandleStatement::HandleStatement( sv connectionString )noexcept(false):
 		_session{ connectionString }
 	{
 		CALL( _session, SQL_HANDLE_DBC, SQLAllocHandle(SQL_HANDLE_STMT, _session, &_handle), "SQLAllocHandle" );

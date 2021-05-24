@@ -41,6 +41,15 @@ namespace Jde::DB::Odbc
 		SQLLEN Output;
 	};
 #pragma warning( pop )
+	template <class T, SQLSMALLINT TSql, SQLSMALLINT TC>
+	struct TBinding : Binding
+	{
+		TBinding()noexcept:Binding{TSql,TC}{}
+		void* Data()noexcept override{ return &_data; }
+	protected:
+		SQL_NUMERIC_STRUCT _data;
+	};
+
 
 	struct BindingNull : public Binding
 	{
@@ -197,6 +206,27 @@ namespace Jde::DB::Odbc
 	private:
 		double _data;
 	};
+	struct BindingNumeric : public TBinding<SQL_NUMERIC_STRUCT,SQL_NUMERIC,SQL_C_NUMERIC>
+	{
+		DataValue GetDataValue()const override{ return DataValue{GetDouble()}; }
+		double GetDouble()const override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
+		{ 
+			uint divisor = (uint)std::pow( 1, _data.scale );
+			_int value = 0, last=1;
+			for( uint i=0; i<SQL_MAX_NUMERIC_LEN; ++i )
+			{
+				const int current = _data.val[i];
+				const int a = current % 16;
+				const int b = current / 16;
+				value += last * a;   
+				last *= 16;
+	         value += last * b;
+				last *= 16;
+			}
+			return (_data.sign ? 1 : -1)*(double)value/divisor; 
+		}
+		std::optional<double> GetDoubleOpt()const{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
+	};
 
 	struct BindingFloat : public Binding
 	{
@@ -249,51 +279,37 @@ namespace Jde::DB::Odbc
 		uint8_t _data;
 	};
 
-	inline up<Binding> Binding::GetBinding( SQLSMALLINT type )
+	inline up<Binding> Binding::GetBinding( SQLSMALLINT type )noexcept(false)
 	{
 		up<Binding> pBinding;
-		switch( type )
-		{
-		case SQL_BIT:
+		if( type==SQL_BIT )
 			pBinding = make_unique<BindingBit>();
-			break;
-		case SQL_TINYINT:
+		else if( type==SQL_TINYINT )
 			pBinding = make_unique<BindingUInt8>();
-			break;
-		case SQL_INTEGER:
+		else if( type==SQL_INTEGER )
 			pBinding = make_unique<BindingInt32>( type );
-			break;
-		case SQL_DECIMAL:
+		else if( type==SQL_DECIMAL )
 			pBinding = make_unique<BindingDouble>( type );
-		break;
-		case SQL_SMALLINT:
+		else if( type==SQL_SMALLINT )
 			pBinding = make_unique<BindingInt16>();
-			break;
-		case SQL_FLOAT:
+		else if( type==SQL_FLOAT )
 			pBinding = make_unique<BindingFloat>( type );
-			break;
-		case SQL_REAL:
+		else if( type==SQL_REAL )
 			pBinding = make_unique<BindingDouble>( type );
-			break;
-		case SQL_DOUBLE:
+		else if( type==SQL_DOUBLE )
 			pBinding = make_unique<BindingDouble>( type );
-			break;
-		case SQL_DATETIME:
-			pBinding = make_unique<BindingDateTime>( type);
-			break;
-		case SQL_BIGINT:
+		else if( type==SQL_DATETIME )
+			pBinding = make_unique<BindingDateTime>( type );
+		else if( type==SQL_BIGINT )
 			pBinding = make_unique<BindingInt>( type );
-			break;
-		case SQL_TYPE_TIMESTAMP:
+		else if( type==SQL_TYPE_TIMESTAMP )
 			pBinding = make_unique<BindingTimeStamp>( type );
-			break;
-			//SQL_C_UBIGINT
-		//case SQL_UBIGINT:
-		//	pBinding = make_unique<BindingType<uint64_t>>( type, SQL_C_UBIGINT );
-		//	break;
-		default:
-			THROW( DBException("Type '{}' is not implemented.", type) );
-		}
+		else if( type==SQL_BIT )
+			pBinding = make_unique<BindingBit>();
+		else if( type==SQL_NUMERIC )
+			pBinding = make_unique<BindingNumeric>();
+		else
+			THROW( DBException("Binding type '{}' is not implemented.", type) );
 		return pBinding;
 	}
 	using std::get;

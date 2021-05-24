@@ -3,7 +3,7 @@
 namespace Jde::DB::Odbc
 {
 	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode );
-	inline void Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName )
+	inline void Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName )noexcept(false)
 	{
 		const int retCode = func();
 		if( retCode!=SQL_SUCCESS )

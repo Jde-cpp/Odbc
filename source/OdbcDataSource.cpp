@@ -15,7 +15,7 @@ Jde::DB::IDataSource* GetDataSource()
 
 namespace Jde::DB::Odbc
 {
-	vector<up<Binding>> AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )noexcept
+	vector<up<Binding>> AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )noexcept(false)
 	{ 
 		vector<up<Binding>> bindings; bindings.reserve( columnCount );
 		for( SQLSMALLINT iCol = 1; iCol <= columnCount; iCol++ )
@@ -85,8 +85,7 @@ namespace Jde::DB::Odbc
 			}
 		}
 		uint resultCount = 0;
-		if( sql=="{call log_application_instance_insert2(?,?,?) }" )
-			sql = "{ call log_application_instance_insert2(?,?,?) }"sv;
+		DBG( sql );
 		var retCode = SQLExecDirect( statement, (SQLCHAR*)sql.data(), static_cast<SQLINTEGER>(sql.size()) );
 		switch( retCode )
 		{
@@ -123,9 +122,9 @@ namespace Jde::DB::Odbc
 			break;
 		case SQL_ERROR:
 			HandleDiagnosticRecord( "SQLExecDirect", statement, SQL_HANDLE_STMT, retCode );
-			THROW( DBException( "SQL_ERROR {}.", sql) );
+			THROW( DBException(sql, pParameters) );
 		default:
-			THROW( DBException( "Unexpected return code:  {:x}.", retCode) );
+			THROW( DBException(retCode, sql, pParameters) );
 		}
 		return resultCount;
 	}
