@@ -80,7 +80,7 @@ namespace Jde::DB::Odbc
 				if( pBinding->DBType==SQL_DATETIME )
 					DBG( "fractions={}"sv, dynamic_cast<const BindingDateTime*>(pBinding.get())->_data.fraction );
 				var result = SQLBindParameter( statement, ++iParameter, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, size, pBinding->DecimalDigits(),  pData, bufferLength, &pBinding->Output );
-				THROW_IF( result<0, DBException(format("{} - parameter {} returned {}", sql, iParameter-1, result)) );
+				THROW_IF( result<0, DBException( "{} - parameter {} returned {}", sql, iParameter-1, result) );
 				parameters.push_back( move(pBinding) );
 			}
 		}

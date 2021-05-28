@@ -271,6 +271,7 @@ namespace Jde::DB::Odbc
 		DataValue GetDataValue()const override{ return DataValue{_data}; }
 
 		uint GetUInt()const noexcept override{ return static_cast<uint>(_data); }
+		std::optional<uint> GetUIntOpt()const{ std::optional<_int> value; if( !IsNull() ) value = GetUInt(); return value; }
 		std::optional<_int> GetIntOpt()const override{ std::optional<_int> value; if( !IsNull() ) value = GetInt(); return value; }
 		_int GetInt()const override{ return static_cast<uint>(_data); }
 		double GetDouble()const override{ return _data; }
