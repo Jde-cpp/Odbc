@@ -24,7 +24,7 @@ namespace Jde::DB::Odbc
 		{
 			var level = retCode!=1 && strncmp( (char*)szState, "01004", SQL_SQLSTATE_SIZE ) ? ELogLevel::Error : ELogLevel::Debug;
 			if( strncmp((char*)szState, "01000", SQL_SQLSTATE_SIZE)==0  )
-				INFO_ONCE( format("[{:<5}] {} {}"sv, szState, szMessage, iError) );
+				INFO_ONCE( format("[{:<5}] {} {}"sv, (char*)szState, (char*)szMessage, iError) );
 			else
 			{
 				LOGX( level, "[{:<5}] {} {}"sv, szState, szMessage, iError );
