@@ -4,6 +4,17 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.29613.14
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Odbc", "Odbc.vcxproj", "{B80EC089-F567-4E1E-B3CC-06091482DDA7}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7FC3CC33-B345-423E-99B6-5D499E531FBF} = {7FC3CC33-B345-423E-99B6-5D499E531FBF}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Framework", "..\..\Framework\source\Framework.vcxproj", "{7FC3CC33-B345-423E-99B6-5D499E531FBF}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tests.Odbc", "..\test\Tests.Odbc.vcxproj", "{F7D0738F-F8C6-4253-BA08-44A14B558844}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7FC3CC33-B345-423E-99B6-5D499E531FBF} = {7FC3CC33-B345-423E-99B6-5D499E531FBF}
+		{B80EC089-F567-4E1E-B3CC-06091482DDA7} = {B80EC089-F567-4E1E-B3CC-06091482DDA7}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -15,6 +26,14 @@ Global
 		{B80EC089-F567-4E1E-B3CC-06091482DDA7}.Debug|x64.Build.0 = Debug|x64
 		{B80EC089-F567-4E1E-B3CC-06091482DDA7}.Release|x64.ActiveCfg = Release|x64
 		{B80EC089-F567-4E1E-B3CC-06091482DDA7}.Release|x64.Build.0 = Release|x64
+		{7FC3CC33-B345-423E-99B6-5D499E531FBF}.Debug|x64.ActiveCfg = Debug|x64
+		{7FC3CC33-B345-423E-99B6-5D499E531FBF}.Debug|x64.Build.0 = Debug|x64
+		{7FC3CC33-B345-423E-99B6-5D499E531FBF}.Release|x64.ActiveCfg = Release|x64
+		{7FC3CC33-B345-423E-99B6-5D499E531FBF}.Release|x64.Build.0 = Release|x64
+		{F7D0738F-F8C6-4253-BA08-44A14B558844}.Debug|x64.ActiveCfg = Debug|x64
+		{F7D0738F-F8C6-4253-BA08-44A14B558844}.Debug|x64.Build.0 = Debug|x64
+		{F7D0738F-F8C6-4253-BA08-44A14B558844}.Release|x64.ActiveCfg = Release|x64
+		{F7D0738F-F8C6-4253-BA08-44A14B558844}.Release|x64.Build.0 = Release|x64
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

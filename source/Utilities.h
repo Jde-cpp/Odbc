@@ -2,13 +2,11 @@
 
 namespace Jde::DB::Odbc
 {
-	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode );
+	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode )noexcept(false);
 	inline void Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName )noexcept(false)
 	{
-		const int retCode = func();
-		if( retCode!=SQL_SUCCESS )
-			HandleDiagnosticRecord( functionName, handle, handleType, retCode);
-		//THROW(Exception("{} - error ({}) - {}", functionName, result, XGBGetLastError()));
+		if( const int retCode = func(); retCode!=SQL_SUCCESS )
+			HandleDiagnosticRecord( functionName, handle, handleType, retCode );
 	}
-	#define CALL(handle, handleType, function,functionName) Call( handle, handleType, [&](){ return function; }, functionName )
+	#define CALL( handle, handleType, function, functionName ) Call( handle, handleType, [&](){ return function; }, functionName )
 }

@@ -124,29 +124,14 @@ namespace Jde::DB::Odbc
 		_int _data ;
 	};
 
-	struct BindingTimeStamp : public Binding
+	struct BindingTimeStamp final: public Binding
 	{
 		BindingTimeStamp( SQLSMALLINT type=SQL_C_TYPE_TIMESTAMP ): Binding{ type, SQL_C_TYPE_TIMESTAMP }{}
 		BindingTimeStamp( SQL_TIMESTAMP_STRUCT value ): Binding{ SQL_TYPE_TIMESTAMP, SQL_C_TYPE_TIMESTAMP },_data{value}{}
 		void* Data()noexcept override{ return &_data; }
-		DataValue GetDataValue()const override{ return DataValue{GetDateTime()}; };
-		//int64_t GetInt()const override{ return _data; }
-		//uint GetUInt()const override{ return static_cast<uint>( GetInt() ); }
-		//std::optional<uint> GetUIntOpt()const{ std::optional<uint> value; if(!IsNull())value=GetUInt(); return value; };
-		virtual DBDateTime GetDateTime()const
-		{  
-			//const Duration duration = std::chrono::milliseconds( _data.fraction/std::numeric_limits<SQLUINTEGER>::max() );
-			//return Jde::DateTime( (uint16)_data.year, (uint8)_data.month, (uint8)_data.day, (uint8)_data.hour, (uint8)_data.minute, (uint8)_data.second, duration ).GetTimePoint(); 
-			return IsNull() ? DBDateTime() : Jde::DateTime( _data.year, (uint8)_data.month, (uint8)_data.day, (uint8)_data.hour, (uint8)_data.minute, (uint8)_data.second, Duration(_data.fraction) ).GetTimePoint();
-		}
-		std::optional<DBDateTime> GetDateTimeOpt()const override
-		{ 
-			std::optional<DBDateTime> value;
-			if( !IsNull() )
-				value = GetDateTime();
-			return value;
-		}
-
+		DataValue GetDataValue()const override{ return IsNull() ? DataValue(nullptr) : DataValue{GetDateTime()}; };
+		DBDateTime GetDateTime()const{ return IsNull() ? DBDateTime{} : Jde::DateTime( _data.year, (uint8)_data.month, (uint8)_data.day, (uint8)_data.hour, (uint8)_data.minute, (uint8)_data.second, Duration(_data.fraction) ).GetTimePoint(); }
+		std::optional<DBDateTime> GetDateTimeOpt()const override{ return IsNull() ? std::nullopt : std::make_optional(GetDateTime()); }
 	private:
 		SQL_TIMESTAMP_STRUCT _data;
 	};

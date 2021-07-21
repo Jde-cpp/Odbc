@@ -1,0 +1,18 @@
+{
+	"wakeDuration": "PT5S",
+	"dbDriver": "Jde.DB.Odbc.dll",
+	"connectionString": "DSN=jde_test_Connection",
+	"logging":
+	{
+		"level": 1,
+		"path": "..",
+		"serverPort":  0,
+		"serverPortTest":  4321
+	},
+	"coroutinePool":
+	{
+		"maxThreadCount": 100,
+		"threadDuration": "PT5S",
+		"poolIdleThreshold": "PT60S"
+	}
+}

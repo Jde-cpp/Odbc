@@ -34,3 +34,6 @@
 *.user
 /source/.bin
 source/*.i
+source/packages/*
+Tests.Odbc.log
+test/packages/*

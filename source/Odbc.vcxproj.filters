@@ -45,6 +45,12 @@
     <ClCompile Include="MsSql\MsSqlStatements.cpp">
       <Filter>Source Files\MsSql</Filter>
     </ClCompile>
+    <ClCompile Include="OdbcAwaitables.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="OdbcWorker.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="OdbcDataSource.h">
@@ -73,6 +79,12 @@
     </ClInclude>
     <ClInclude Include="MsSql\MsSqlStatements.h">
       <Filter>Header Files\MsSql</Filter>
+    </ClInclude>
+    <ClInclude Include="OdbcAwaitables.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="OdbcWorker.h">
+      <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
 </Project>
