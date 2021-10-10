@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../../Framework/source/db/DataType.h"
 #include "../../Framework/source/db/DBException.h"
 
@@ -20,7 +20,7 @@ namespace Jde::DB::Odbc
 		virtual void* Data()noexcept=0;
 		virtual DataValue GetDataValue()const=0;
 		[[noreturn]] virtual bool GetBit()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType) ); }
-		[[noreturn]] virtual const std::string to_string()const{ THROW( DBException("to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
+		[[noreturn]] virtual string to_string()const{ THROW( DBException("to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
 		[[noreturn]] virtual int64_t GetInt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetInt", DBType, CodeType) ); }
 		[[noreturn]] virtual int32_t GetInt32()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetInt32", DBType, CodeType) ); }
 		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={} {}", "GetIntOpt", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
@@ -67,12 +67,12 @@ namespace Jde::DB::Odbc
 		BindingString( SQLSMALLINT type, SQLLEN size ):Binding{ type, SQL_C_CHAR, size }{ _buffer.reserve( size ); }
 		BindingString( str value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
 		BindingString( sv value ):Binding{ SQL_VARCHAR, SQL_C_CHAR, value.size() },_buffer( value.begin(), value.end() ){}
-		void* Data()noexcept override{ return _buffer.data(); }
-		DB::DataValue GetDataValue()const override{ return DataValue{to_string()}; }
-		const std::string to_string()const override{ return Output==-1 ? string{} : string{ _buffer.data(), _buffer.data()+Output }; }
+		α Data()noexcept->void* override{ return _buffer.data(); }
+		α GetDataValue()const->DB::DataValue override{ return Output==-1 ? DB::DataValue{} : DB::DataValue{ to_string() }; }
+		α to_string()const->string override{ return Output==-1 ? string{} : string{ _buffer.data(), _buffer.data()+Output }; }
 
-		SQLLEN BufferLength()const noexcept override{return _buffer.size();}
-		SQLULEN Size()const noexcept override{ return _buffer.size(); }
+		α BufferLength()const noexcept->SQLLEN override{return _buffer.size();}
+		α Size()const noexcept->SQLULEN override{ return _buffer.size(); }
 	private:
 		vector<char> _buffer;
 	};
@@ -86,7 +86,7 @@ namespace Jde::DB::Odbc
 		DataValue GetDataValue()const override{ return DataValue{_data!=0}; }
 		bool GetBit()const override{ return _data!=0; }
 		int64_t GetInt()const override{ return static_cast<int64_t>(_data); }
-		const std::string to_string()const override{ return _data ? "true" : "false"; }
+		string to_string()const override{ return _data ? "true" : "false"; }
 	private:
 		char _data;
 	};
@@ -193,8 +193,8 @@ namespace Jde::DB::Odbc
 	};
 	struct BindingNumeric : public TBinding<SQL_NUMERIC_STRUCT,SQL_NUMERIC,SQL_C_NUMERIC>
 	{
-		DataValue GetDataValue()const override{ return DataValue{GetDouble()}; }
-		double GetDouble()const override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
+		α GetDataValue()const->DataValue override{ return DataValue{GetDouble()}; }
+		α GetDouble()const->double override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
 		{ 
 			uint divisor = (uint)std::pow( 1, _data.scale );
 			_int value = 0, last=1;
@@ -210,7 +210,8 @@ namespace Jde::DB::Odbc
 			}
 			return (_data.sign ? 1 : -1)*(double)value/divisor; 
 		}
-		std::optional<double> GetDoubleOpt()const{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
+		α GetDoubleOpt()const->std::optional<double> override{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
+		α GetInt()const->_int override{ return (_int)GetDouble(); }
 	};
 
 	struct BindingFloat : public Binding

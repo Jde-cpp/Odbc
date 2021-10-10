@@ -1,4 +1,4 @@
-#include "OdbcDataSource.h"
+﻿#include "OdbcDataSource.h"
 #include "../../Framework/source/db/DBException.h"
 #include "MsSql/MsSqlSchemaProc.h"
 #include "Bindings.h"
@@ -140,23 +140,23 @@ namespace Jde::DB::Odbc
 		return resultCount;
 	}
 	
-	FunctionAwaitable OdbcDataSource::SelectCo( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* pParameters, bool log )noexcept
+	α OdbcDataSource::SelectCo( string&& ql, std::function<void(const IRow&)> f, const std::vector<DataValue>&& parameters, bool log )noexcept->up<IAwaitable>
 	{ 
-		return FunctionAwaitable{ [sql,f,pParameters,log,this]( coroutine_handle<Task2::promise_type> h )mutable->Task2
+		return make_unique<FunctionAwaitable>( [sql=move(ql),f,parms=move(parameters),log,this]( coroutine_handle<Task2::promise_type> h )mutable->Task2
 		{
 			try
 			{
-				auto pBindings = pParameters && pParameters->size() ? make_unique<vector<up<Binding>>>() : up<vector<up<Binding>>>{};
+				auto pBindings = parms.size() ? make_unique<vector<up<Binding>>>() : up<vector<up<Binding>>>{};
 				if( pBindings )
 				{
-					pBindings->reserve( pParameters->size() );
-					for( var& param : *pParameters )
+					pBindings->reserve( parms.size() );
+					for( var& param : parms )
 						pBindings->push_back( Binding::Create(param) );
 				}
 				auto pSession = (co_await Connect()).Get<HandleSessionAsync>();
 				auto pStatement = ( co_await Execute(move(*pSession), string(sql), move(pBindings), log) ).Get<HandleStatementAsync>();
 				if( f )
-					pStatement = ( co_await Fetch(move(*pStatement), *f) ).Get<HandleStatementAsync>();
+					pStatement = ( co_await Fetch(move(*pStatement), f) ).Get<HandleStatementAsync>();
 				else
 					CALL( *pStatement, SQL_HANDLE_STMT, ::SQLRowCount(*pStatement, (SQLLEN*)&pStatement->_result), "SQLRowCount" );
 
@@ -167,6 +167,6 @@ namespace Jde::DB::Odbc
 				h.promise().get_return_object().SetResult( e );
 			}
 			h.resume();
-		}}; 
+		}); 
 	}
 }

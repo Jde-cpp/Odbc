@@ -1,4 +1,4 @@
-#pragma once
+﻿#pragma once
 #include "../../Framework/source/db/Row.h"
 #include "Bindings.h"
 #include <jde/Assert.h>
@@ -10,7 +10,7 @@ namespace Jde::DB::Odbc
 		OdbcRow( const vector<up<Binding>>& bindings );
 		void Reset()const{_index=0;}
 
-		DataValue operator[]( uint value )const override;
+		α operator[]( uint value )const->DataValue override;
 		bool GetBit( uint position )const override;
 		std::string GetString( uint position )const override;
 		CIString GetCIString( uint i )const override{ return CIString{GetString(i)}; }
@@ -32,7 +32,7 @@ namespace Jde::DB::Odbc
 		OdbcRow2( const vector<Binding>& bindings )noexcept:_bindings{bindings}{};
 		void Reset()const noexcept{_index=0;}
 
-		DataValue operator[]( uint position )const noexcept override{ ASSERT( position<_bindings.size() );  return _bindings[position].GetDataValue(); }
+		α operator[]( uint position )const noexcept->DataValue override{ ASSERT( position<_bindings.size() );  return _bindings[position].GetDataValue(); }
 		bool GetBit( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetBit(); }
 		std::string GetString( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].to_string(); }
 		CIString GetCIString( uint i )const noexcept override{ return CIString{GetString(i)}; }

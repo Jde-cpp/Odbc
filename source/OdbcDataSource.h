@@ -24,10 +24,10 @@ namespace Jde::DB::Odbc
 		uint Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* values, bool log )noexcept(false);
 		ⓣ ScalerCo( sv sql, const vector<DataValue>&& parameters={} )noexcept(false)->FunctionAwaitable;//sp<T>
 		//ⓣ ScalerNullCo( string&& sql, const vector<DataValue>&& parameters )noexcept(false)->Task2;//sp<optional<T>>
-
-		FunctionAwaitable SelectCo( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* pParameters, bool log )noexcept override;
-		void SetAsynchronous()noexcept(false) override;
-		void SetConnectionString( sv x )noexcept override;
+		
+		α SelectCo( string&& sql, std::function<void(const IRow&)> f, const std::vector<DataValue>&& parameters, bool log )noexcept->up<IAwaitable> override;
+		α SetAsynchronous()noexcept(false)->void override;
+		α SetConnectionString( sv x )noexcept->void override;
 	private:
 		α Connect()noexcept(false){ return ConnectAwaitable{_connectionString, Asynchronous}; }
 		Ω Execute( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings, bool log )noexcept{ return ExecuteAwaitable( move(session), move(sql), move(pBindings), log ); }

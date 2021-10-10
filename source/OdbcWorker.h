@@ -38,8 +38,8 @@ namespace Jde::DB::Odbc
 	{
 		if( T::_threadCount==std::numeric_limits<uint8>::max() )
 		{
-			var pSettings = Settings::TryGetSubcontainer<Settings::Container>( "workers", T::Name );
-			T::_threadCount = pSettings ? pSettings->Get2<uint8>( "threads" ).value_or(0) : 0;
+			//var pSettings = Settings::TryGetSubcontainer<Settings::Container>( "workers", T::Name );
+			T::_threadCount = Settings::TryGet<uint8>( format("workders/{}/threads", T::Name) ).value_or( 0 );
 		}
 		return T::_threadCount;
 	}
@@ -54,7 +54,7 @@ namespace Jde::DB::Odbc
 			Threading::AtomicGuard l2{ _objectLock };
 			//TODO:  load settings, if thread count==0 then work with it here, else create worker.
 			var pSettings = Settings::TryGetSubcontainer<Settings::Container>( "workers", workerName );
-			var threads = pSettings ? pSettings->Get2<uint8>( "threads" ).value_or(0) : 0;
+			var threads = pSettings ? pSettings->Get<uint8>( "threads" ).value_or(0) : 0;
 		}
 		return p;
 	}

@@ -1,4 +1,4 @@
-#include "OdbcRow.h"
+﻿#include "OdbcRow.h"
 #include <jde/Assert.h>
 
 namespace Jde::DB::Odbc
@@ -7,7 +7,7 @@ namespace Jde::DB::Odbc
 		_bindings{bindings}
 	{}
 	
-	DataValue OdbcRow::operator[]( uint position )const
+	α OdbcRow::operator[]( uint position )const->DataValue
 	{
 		ASSERT( position<_bindings.size() );
 		return _bindings[position]->GetDataValue();

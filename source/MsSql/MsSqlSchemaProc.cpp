@@ -148,7 +148,7 @@ namespace Jde::DB::MsSql
 		else if(typeName=="money")
 			type=DataType::Money;
 		else
-			GetDefaultLogger()->warn( "Unknown datatype({}).  need to implement, no big deal if not our table.", typeName );
+			WARN( "Unknown datatype({}).  need to implement, no big deal if not our table.", typeName );
 		return type;
 	}
 
