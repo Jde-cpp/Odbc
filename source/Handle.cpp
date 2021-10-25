@@ -15,7 +15,7 @@ namespace Jde::DB::Odbc
 		{
 			CALL( nullptr, SQL_HANDLE_ENV, SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, (SQLPOINTER)SQL_CP_ONE_PER_HENV, 0), "SQLSetEnvAttr(SQL_ATTR_CONNECTION_POOLING)" );
 			SQLHENV handle;
-			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IF( rc==SQL_ERROR, DBException("({}) - Unable to allocate an environment handle", rc) );
+			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IFX( rc==SQL_ERROR, DBException("({}) - Unable to allocate an environment handle", rc) );
 			CALL( handle, SQL_HANDLE_ENV, SQLSetEnvAttr(handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0), "SQLSetEnvAttr(SQL_ATTR_ODBC_VERSION)" );
 			_handle = shared_ptr<void>{ handle, [](SQLHENV h)
 			{
@@ -23,9 +23,6 @@ namespace Jde::DB::Odbc
 		}
 	}
 
-	//HDBC HandleSession::s_handle{nullptr};
-	//mutex HandleSession::_mutex;
-	//atomic<uint> index=0;
 	HandleSession::HandleSession()noexcept(false)
 	{
 		CALL( _env, SQL_HANDLE_ENV, SQLAllocHandle(SQL_HANDLE_DBC, _env, &_handle), "SQLAllocHandle" );
@@ -41,7 +38,7 @@ namespace Jde::DB::Odbc
 		SQLSMALLINT connectionStringLength;
 		CALL( _handle, SQL_HANDLE_DBC, SQLDriverConnect(_handle, nullptr, (SQLCHAR*)string(connectionString).c_str(), SQL_NTS, connectionStringResult, 8192, &connectionStringLength, SQL_DRIVER_NOPROMPT), "SQLDriverConnect" );
 		if( connectionStringLength>0 )
-			INFO_ONCE( string((char*)connectionStringResult) );
+			INFO_ONCE( "connectionString={}", (char*)connectionStringResult );
 		else
 			CRITICAL( "connectionString Length={}"sv, connectionStringLength );
 	}

@@ -75,7 +75,7 @@ namespace Jde::DB::Odbc
 				SQLUSMALLINT i = 0;
 				for( var& pBinding : *_pBindings )
 				{
-					var result = ::SQLBindParameter( Statement, ++i, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, pBinding->Size(), pBinding->DecimalDigits(),  pBinding->Data(), pBinding->BufferLength(), &pBinding->Output );  THROW_IF( result<0, DBException( "{} - parameter {} returned {} - {}", _sql, i-1, result, ::GetLastError()) );
+					var result = ::SQLBindParameter( Statement, ++i, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, pBinding->Size(), pBinding->DecimalDigits(),  pBinding->Data(), pBinding->BufferLength(), &pBinding->Output );  THROW_IFX( result<0, DBException( "{} - parameter {} returned {} - {}", _sql, i-1, result, ::GetLastError()) );
 				}
 			}
 			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLExecDirect(h, (SQLCHAR*)_sql.data(), static_cast<SQLINTEGER>(_sql.size())), "SQLExecDirect" ); 

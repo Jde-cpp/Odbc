@@ -14,24 +14,24 @@ namespace Jde::DB::Odbc
 			Output{output}
 		{}
 		virtual ~Binding()=default;
-		static up<Binding> GetBinding( SQLSMALLINT type );
-		static up<Binding> Create( DataValue parameter );
+		Ω GetBinding( SQLSMALLINT type )->up<Binding>;
+		Ω Create( DataValue parameter )->up<Binding>;
 		
-		virtual void* Data()noexcept=0;
-		virtual DataValue GetDataValue()const=0;
-		[[noreturn]] virtual bool GetBit()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType) ); }
-		[[noreturn]] virtual string to_string()const{ THROW( DBException("to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
-		[[noreturn]] virtual int64_t GetInt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetInt", DBType, CodeType) ); }
-		[[noreturn]] virtual int32_t GetInt32()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetInt32", DBType, CodeType) ); }
-		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={} {}", "GetIntOpt", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
-		[[noreturn]] virtual double GetDouble()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetDouble", DBType, CodeType) ); }
+		β Data()noexcept->void* = 0;
+		β GetDataValue()const->DataValue=0;
+		[[noreturn]] virtual bool GetBit()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType) ); }
+		[[noreturn]] virtual string to_string()const{ THROWX( DBException("to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
+		[[noreturn]] virtual int64_t GetInt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetInt", DBType, CodeType) ); }
+		[[noreturn]] virtual int32_t GetInt32()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetInt32", DBType, CodeType) ); }
+		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={} {}", "GetIntOpt", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
+		[[noreturn]] virtual double GetDouble()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDouble", DBType, CodeType) ); }
 		virtual float GetFloat()const{ return static_cast<float>( GetDouble() ); }
-		[[noreturn]] virtual std::optional<double> GetDoubleOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetDoubleOpt", DBType, CodeType) ); }
-		[[noreturn]] virtual DBDateTime GetDateTime()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetDateTime", DBType, CodeType) ); }
-		[[noreturn]] virtual std::optional<DBDateTime> GetDateTimeOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetDateTimeOpt", DBType, CodeType) ); }
-		[[noreturn]] virtual uint GetUInt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={}", "GetUInt", DBType, CodeType) ); }
+		[[noreturn]] β GetDoubleOpt()const->std::optional<double>{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDoubleOpt", DBType, CodeType) ); }
+		[[noreturn]] β GetDateTime()const->DBDateTime{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDateTime", DBType, CodeType) ); }
+		[[noreturn]] β GetDateTimeOpt()const->std::optional<DBDateTime>{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDateTimeOpt", DBType, CodeType) ); }
+		[[noreturn]] virtual uint GetUInt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetUInt", DBType, CodeType) ); }
 		virtual uint32_t GetUInt32(uint position )const{ return static_cast<uint32_t>(GetUInt()); }
-		[[noreturn]] virtual std::optional<uint> GetUIntOpt()const{ THROW( DBException("{} not implemented for DBType={} CodeType={} - {}", "GetUIntOpt", DBType, CodeType, GetTypeName<decltype(this)>() ) ); };
+		[[noreturn]] virtual std::optional<uint> GetUIntOpt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={} - {}", "GetUIntOpt", DBType, CodeType, GetTypeName<decltype(this)>() ) ); };
 		bool IsNull()const{ return Output==SQL_NULL_DATA; }
 		virtual SQLULEN Size()const noexcept{return 0;}
 		virtual SQLSMALLINT DecimalDigits()const noexcept{return 0;}
@@ -58,8 +58,6 @@ namespace Jde::DB::Odbc
 		{}
 		void* Data()noexcept override{ return nullptr; }
 		DB::DataValue GetDataValue()const override{ return DataValue{nullptr}; }
-		//SQLLEN BufferLength()const noexcept override{return SQL_NTS;}
-		//char _dummyValue={0};
 	};
 
 	struct BindingString final: public Binding
@@ -103,12 +101,11 @@ namespace Jde::DB::Odbc
 		std::optional<_int> GetIntOpt()const{ std::optional<_int> value; if( !IsNull() )value=GetInt(); return value; }
 		std::optional<uint> GetUIntOpt()const override{ std::optional<uint> optional; if( !IsNull() ) optional=GetUInt(); return optional; };
 	private:
-		int _data ;
+		int _data;
 	};
 	
 	struct BindingDecimal : public Binding
-	{
-	};
+	{};
 
 	struct BindingInt : public Binding
 	{
@@ -150,7 +147,6 @@ namespace Jde::DB::Odbc
 	
 	struct BindingDateTime : public Binding
 	{//{ SQL_DATETIME, SQL_C_TYPE_TIMESTAMP }
-		//BindingDateTime( SQLSMALLINT type=SQL_DATETIME ):Binding{ type, SQL_C_TYPE_TIMESTAMP }{}
 		BindingDateTime( SQLSMALLINT type=SQL_TYPE_TIMESTAMP ):Binding{ type, SQL_C_TIMESTAMP, sizeof(SQL_TIMESTAMP_STRUCT) }{}
 		
 		BindingDateTime( const optional<DBDateTime>& value );
@@ -234,16 +230,14 @@ namespace Jde::DB::Odbc
 	{
 		BindingInt16():Binding{ SQL_SMALLINT, SQL_C_SSHORT }{}
 		BindingInt16( int16_t value ): Binding{ SQL_SMALLINT, SQL_C_SSHORT },_data{value}{}
-		//BindingInt16( const Decimal2& value ): Binding{ SQL_SMALLINT, SQL_C_SSHORT },_data{ (double)value }{}
-		//BindingInt16( const optional<double>& value ): Binding{ SQL_SMALLINT, SQL_C_SSHORT },_data{value.has_value() ? value.value() : 0.0}{ if( !value.has_value() ) Output=SQL_NULL_DATA; }
 
-		void* Data()noexcept override{ return &_data; }
-		DataValue GetDataValue()const override{ return DataValue{_data}; }
-		uint GetUInt()const noexcept override{ return static_cast<uint>(_data); }
-		_int GetInt()const noexcept override{ return static_cast<_int>(_data); }
-		optional<_int> GetIntOpt()const noexcept override{ std::optional<_int> value; if( !IsNull() ) value = GetInt(); return value; }
-		double GetDouble()const override{ return _data; }
-		std::optional<double> GetDoubleOpt()const{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
+		α Data()noexcept->void* override{ return &_data; }
+		α GetDataValue()const->DataValue override{ return Output==-1 ? DataValue{nullptr} : DataValue{GetInt()}; }
+		α GetUInt()const noexcept->uint override{ return static_cast<uint>(_data); }
+		α GetInt()const noexcept->_int override{ return static_cast<_int>(_data); }
+		α GetIntOpt()const noexcept->optional<_int> override{ std::optional<_int> value; if( !IsNull() ) value = GetInt(); return value; }
+		α GetDouble()const->double override{ return _data; }
+		α GetDoubleOpt()const->std::optional<double>{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
 	private:
 		int16_t _data;
 	};
@@ -296,7 +290,7 @@ namespace Jde::DB::Odbc
 		else if( type==SQL_NUMERIC )
 			pBinding = make_unique<BindingNumeric>();
 		else
-			THROW( DBException("Binding type '{}' is not implemented.", type) );
+			THROWX( DBException("Binding type '{}' is not implemented.", type) );
 		return pBinding;
 	}
 	using std::get;

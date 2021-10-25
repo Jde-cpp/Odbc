@@ -20,8 +20,8 @@ namespace Jde::DB::Odbc
 		uint ExecuteProc(sv sql, const std::vector<DataValue>& parameters, bool log=true)noexcept(false) override;
 		uint ExecuteProc(sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log)noexcept(false) override;
 		
-		uint Select( sv sql, std::function<void(const IRow&)> f, const vector<DataValue>* pValues, bool log )noexcept(false)override{ return Select(sql, &f, pValues, log); }
-		uint Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* values, bool log )noexcept(false);
+		α Select( sv sql, std::function<void(const IRow&)> f, const vector<DataValue>* pValues, bool log, SRCE )noexcept(false)->uint override{ return Select(sql, &f, pValues, log, sl); }
+		α Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* values, bool log, SRCE )noexcept(false)->uint;
 		ⓣ ScalerCo( sv sql, const vector<DataValue>&& parameters={} )noexcept(false)->FunctionAwaitable;//sp<T>
 		//ⓣ ScalerNullCo( string&& sql, const vector<DataValue>&& parameters )noexcept(false)->Task2;//sp<optional<T>>
 		
@@ -44,7 +44,6 @@ namespace Jde::DB::Odbc
 			T result;
 			std::function<void(const IRow&)> f = [&result](const IRow& row){ result = row.Get<T>(0); DBG("result={}"sv, result); };
 			auto result2 = co_await SelectCo( sql, &f, &params, true );
-			//h.promise().get_return_object().SetResult( move(result2) );
 			if( result2.HasError() )
 				h.promise().get_return_object().SetResult( move(result2) );
 			else

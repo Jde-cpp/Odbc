@@ -1,4 +1,5 @@
 ﻿#include "OdbcDataSource.h"
+#include "../../Framework/source/db/Database.h"
 #include "../../Framework/source/db/DBException.h"
 #include "MsSql/MsSqlSchemaProc.h"
 #include "Bindings.h"
@@ -41,10 +42,10 @@ namespace Jde::DB::Odbc
 
 			SQLLEN bufferSize = 0;
 			up<Binding> pBinding;
-			if( ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR || ssType == -9/*varchar(max)?*/ )
+			if( ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR || ssType == -9/*varchar(max)?*/ || ssType == -10/*nvarchar(max)?*/ )
 			{
 				CALL( statement, SQL_HANDLE_STMT, ::SQLColAttribute(statement, iCol, SQL_DESC_DISPLAY_SIZE, NULL, 0, NULL, &bufferSize), "SQLColAttribute::Display" );
-				if( ssType==-9 && bufferSize==0 )
+				if( (ssType==-9 || ssType==-10) && bufferSize==0 )
 					bufferSize = (1 << 14) - 1;//TODO handle varchar(max).
 				pBinding = make_unique<BindingString>( (SQLSMALLINT)ssType, ++bufferSize );
 			}
@@ -67,20 +68,14 @@ namespace Jde::DB::Odbc
 	{
 		return make_shared<MsSql::MsSqlSchemaProc>( shared_from_this() );
 	}
-	uint OdbcDataSource::Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* pParameters, bool log )noexcept(false)
+	α OdbcDataSource::Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* pParameters, bool log, const source_location& sl )noexcept(false)->uint
 	{
 		HandleStatement statement{ _connectionString };
 		vector<SQLUSMALLINT> paramStatusArray;
 		vector<up<Binding>> parameters;
 		void* pData = nullptr;
-		//SQLINTEGER paramsProcessed=0;
 		if( pParameters )
 		{
-			//0x000001e557a560a0 "{call log_application_instance_insert2(?,?,?) }"
-	//		auto retcode = SQLSetStmtAttr( statement, SQL_ATTR_PARAMSET_SIZE, (SQLPOINTER)pParameters->size(), 0 ); THROW_IF( retcode<0, DBException(format("{} - SQL_ATTR_PARAMSET_SIZE returned {}", sql, retcode)) );
-//			paramStatusArray.reserve( pParameters->size() );
-	//		retcode = SQLSetStmtAttr( statement, SQL_ATTR_PARAM_STATUS_PTR, paramStatusArray.data(), pParameters->size() ); THROW_IF( retcode<0, DBException(format("{} - SQL_ATTR_PARAM_STATUS_PTR returned {}", sql, retcode)) );
-			//retcode = SQLSetStmtAttr( statement, SQL_ATTR_PARAMS_PROCESSED_PTR, &paramsProcessed, 0 ); THROW_IF( retcode<0, DBException(format("{} - SQL_ATTR_PARAMS_PROCESSED_PTR returned {}", sql, retcode)) );
 			parameters.reserve( pParameters->size() );
 			SQLUSMALLINT iParameter = 0;
 			for( var& param : *pParameters )
@@ -91,12 +86,12 @@ namespace Jde::DB::Odbc
 				if( pBinding->DBType==SQL_DATETIME )
 					DBG( "fractions={}"sv, dynamic_cast<const BindingDateTime*>(pBinding.get())->_data.fraction );
 				var result = SQLBindParameter( statement, ++iParameter, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, size, pBinding->DecimalDigits(),  pData, bufferLength, &pBinding->Output );
-				THROW_IF( result<0, DBException( "{} - parameter {} returned {}", sql, iParameter-1, result) );
+				THROW_IFXSL( result<0, DBException(result, sql, pParameters, format("parameter {}", (uint)iParameter-1)) );
 				parameters.push_back( move(pBinding) );
 			}
 		}
 		uint resultCount = 0;
-		DBG( sql );
+		DB::Log( sql, pParameters, sl );
 		var retCode = SQLExecDirect( statement, (SQLCHAR*)sql.data(), static_cast<SQLINTEGER>(sql.size()) );
 		switch( retCode )
 		{
@@ -111,11 +106,8 @@ namespace Jde::DB::Odbc
 			{
 				var bindings = AllocateBindings( statement, columnCount );
 				OdbcRow row{ bindings };
-				for(;;)
+				while( ::SQLFetch(statement)!=SQL_NO_DATA_FOUND )
 				{
-					var retCode2 = ::SQLFetch( statement );
-					if( retCode2==SQL_NO_DATA_FOUND )
-						break;
 					row.Reset();
 					(*f)( row );
 				}
@@ -129,13 +121,12 @@ namespace Jde::DB::Odbc
 			break;
 		}
 		case SQL_INVALID_HANDLE:
-			THROW( DBException( "Invalid Handle:  {:x}.", retCode) );
+			THROWX( DBException( "Invalid Handle:  {:x}.", retCode) );
 			break;
 		case SQL_ERROR:
-			HandleDiagnosticRecord( "SQLExecDirect", statement, SQL_HANDLE_STMT, retCode );
-			THROW( DBException(sql, pParameters) );
+			throw DBException{ retCode, sql, pParameters, HandleDiagnosticRecord("SQLExecDirect", statement, SQL_HANDLE_STMT, retCode, sl), sl };
 		default:
-			THROW( DBException(retCode, sql, pParameters) );
+			THROWX( DBException(retCode, sql, pParameters) );
 		}
 		return resultCount;
 	}
@@ -164,7 +155,7 @@ namespace Jde::DB::Odbc
 			}
 			catch( const std::exception& e )
 			{
-				h.promise().get_return_object().SetResult( e );
+				h.promise().get_return_object().SetResult( std::make_exception_ptr(e) );
 			}
 			h.resume();
 		}); 

@@ -1,9 +1,9 @@
-#pragma once
+﻿#pragma once
 
 namespace Jde::DB::Odbc
 {
-	void HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode )noexcept(false);
-	inline void Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName )noexcept(false)
+	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SRCE )noexcept(false)->string;
+	Ξ Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName )noexcept(false)
 	{
 		if( const int retCode = func(); retCode!=SQL_SUCCESS )
 			HandleDiagnosticRecord( functionName, handle, handleType, retCode );
