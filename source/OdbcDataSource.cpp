@@ -60,9 +60,9 @@ namespace Jde::DB::Odbc
 
 	uint OdbcDataSource::Execute( sv sql )noexcept(false){ return Select( sql, nullptr, nullptr, true ); }
 	uint OdbcDataSource::Execute( sv sql, const std::vector<DataValue>& parameters, bool log)noexcept(false){ return Execute(sql, &parameters, nullptr, false, log); }
-	uint OdbcDataSource::Execute( sv sql, const std::vector<DataValue>* pParameters, std::function<void(const IRow&)>* f, bool isStoredProc, bool log )noexcept(false){  return Select( sql, f, pParameters, log );  }
-	uint OdbcDataSource::ExecuteProc( sv sql, const std::vector<DataValue>& parameters, bool log )noexcept(false){ return Select( format( "{{call {} }}", sql), nullptr, &parameters, log); }
-	uint OdbcDataSource::ExecuteProc( sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log )noexcept(false){ return Select(format( "{{call {} }}", sql), f, &parameters, log); }
+	uint OdbcDataSource::Execute( sv sql, const std::vector<DataValue>* pParameters, std::function<void(const IRow&)>* f, bool isStoredProc, bool log, const source_location& sl )noexcept(false){  return Select( sql, f, pParameters, log, sl );  }
+	uint OdbcDataSource::ExecuteProc( sv sql, const std::vector<DataValue>& parameters, bool log, const source_location& sl )noexcept(false){ return Select( format("{{call {} }}", sql), nullptr, &parameters, log, sl); }
+	uint OdbcDataSource::ExecuteProc( sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log, const source_location& sl )noexcept(false){ return Select(format( "{{call {} }}", sql), f, &parameters, log, sl); }
 
 	sp<ISchemaProc> OdbcDataSource::SchemaProc()noexcept
 	{
@@ -86,7 +86,7 @@ namespace Jde::DB::Odbc
 				if( pBinding->DBType==SQL_DATETIME )
 					DBG( "fractions={}"sv, dynamic_cast<const BindingDateTime*>(pBinding.get())->_data.fraction );
 				var result = SQLBindParameter( statement, ++iParameter, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, size, pBinding->DecimalDigits(),  pData, bufferLength, &pBinding->Output );
-				THROW_IFXSL( result<0, DBException(result, sql, pParameters, format("parameter {}", (uint)iParameter-1)) );
+				THROW_IFX( result<0, DBException(result, sql, pParameters, format("parameter {}", (uint)iParameter-1), sl)  );
 				parameters.push_back( move(pBinding) );
 			}
 		}
@@ -121,12 +121,12 @@ namespace Jde::DB::Odbc
 			break;
 		}
 		case SQL_INVALID_HANDLE:
-			THROWX( DBException( "Invalid Handle:  {:x}.", retCode) );
+			throw DBException( retCode, sql, pParameters, "SQL_INVALID_HANDLE" );
 			break;
 		case SQL_ERROR:
 			throw DBException{ retCode, sql, pParameters, HandleDiagnosticRecord("SQLExecDirect", statement, SQL_HANDLE_STMT, retCode, sl), sl };
 		default:
-			THROWX( DBException(retCode, sql, pParameters) );
+			throw DBException( retCode, sql, pParameters, "Unknown error" );
 		}
 		return resultCount;
 	}

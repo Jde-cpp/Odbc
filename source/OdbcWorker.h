@@ -30,8 +30,8 @@ namespace Jde::DB::Odbc
 		ⓣ static Start( sv workerName )noexcept->sp<T>;
 		//ⓣ static Push( std::coroutine_handle<>&& hCoroutine, HANDLE&& hEvent )noexcept->void;
 	private:
-		static vector<up<IWorker>> _workers;  static atomic<bool> _objectLock;
-		static flat_set<sv> _workerNames; static atomic<bool> _nameLock;
+		static vector<up<IWorker>> _workers;  static std::atomic_flag _objectLock;
+		static flat_set<sv> _workerNames; static std::atomic_flag _nameLock;
 	};
 
 	ⓣ static IWorker::ThreadCount()noexcept->uint8
@@ -47,11 +47,11 @@ namespace Jde::DB::Odbc
 	ⓣ WorkerManager::Start( sv workerName )noexcept->sp<T>
 	{
 		sp<T> p;
-		Threading::AtomicGuard l{ _nameLock };
+		AtomicGuard l{ _nameLock };
 		if( _workerNames.emplace( workerName ).second )
 		{
 			l.unlock();
-			Threading::AtomicGuard l2{ _objectLock };
+			AtomicGuard l2{ _objectLock };
 			//TODO:  load settings, if thread count==0 then work with it here, else create worker.
 			var pSettings = Settings::TryGetSubcontainer<Settings::Container>( "workers", workerName );
 			var threads = pSettings ? pSettings->Get<uint8>( "threads" ).value_or(0) : 0;

@@ -8,7 +8,7 @@ namespace Jde::DB::Odbc
 {
 	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, const source_location& sl )noexcept(false)->string
 	{
-		THROW_IFX( retCode==SQL_INVALID_HANDLE, DBException("({}) {} - Invalid handle {:x}", functionName, hType, retCode) );
+		THROW_IF( retCode==SQL_INVALID_HANDLE, "({}) {} - Invalid handle {:x}", functionName, hType, retCode );
 		SQLSMALLINT iRec = 0;
 		SQLINTEGER iError;
 		SQLCHAR szMessage[SQL_MAX_MESSAGE_LENGTH];
@@ -22,12 +22,12 @@ namespace Jde::DB::Odbc
 			{
 				const string msg{ format("[{:<5}] {} {}", (char*)szState, (char*)szMessage, iError) };
 				os << msg;
-				Logging::LogOnce( {msg, ELogLevel::Information} );
+				Logging::LogOnce( Logging::Message{ELogLevel::Information, msg, SRCE_CUR} );
 			}
 			else
 			{
-				Logging::LogNoServer( Logging::MessageBase{"[{:<5}] {} {}", level, sl}, szState, szMessage, iError );
-				THROW_IFX( functionName=="SQLDriverConnect" && level==ELogLevel::Error, DBException("[{:<5}] {} {}"sv, szState, szMessage, iError) );
+				Logging::LogNoServer( Logging::Message{ level, "[{:<5}] {} {}", sl}, szState, szMessage, iError );
+				THROW_IF( functionName=="SQLDriverConnect" && level==ELogLevel::Error, "[{:<5}] {} {}"sv, szState, szMessage, iError );
 			}
 		}
 		return os.str();

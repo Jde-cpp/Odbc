@@ -13,12 +13,12 @@ namespace Jde::DB::Odbc
 	struct OdbcDataSource : IDataSource
 	{
 		sp<ISchemaProc> SchemaProc()noexcept;
-		uint Execute( sv sql )noexcept(false) override;
-
-		uint Execute( sv sql, const std::vector<DataValue>& parameters, bool log)noexcept(false) override;
-		uint Execute( sv sql, const std::vector<DataValue>* pParameters, std::function<void(const IRow&)>* f, bool isStoredProc=false, bool log=true )noexcept(false);
-		uint ExecuteProc(sv sql, const std::vector<DataValue>& parameters, bool log=true)noexcept(false) override;
-		uint ExecuteProc(sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log)noexcept(false) override;
+		α Execute( sv sql )noexcept(false)->uint override;
+		
+		α Execute( sv sql, const std::vector<DataValue>& parameters, bool log)noexcept(false)->uint override;
+		α Execute( sv sql, const std::vector<DataValue>* pParameters, std::function<void(const IRow&)>* f, bool isStoredProc=false, bool log=true, SRCE )noexcept(false)->uint;
+		α ExecuteProc( sv sql, const std::vector<DataValue>& parameters, bool log=true, SRCE )noexcept(false)->uint override;
+		α ExecuteProc( sv sql, const std::vector<DataValue>& parameters, std::function<void(const IRow&)> f, bool log, SRCE )noexcept(false)->uint override;
 		
 		α Select( sv sql, std::function<void(const IRow&)> f, const vector<DataValue>* pValues, bool log, SRCE )noexcept(false)->uint override{ return Select(sql, &f, pValues, log, sl); }
 		α Select( sv sql, std::function<void(const IRow&)>* f, const std::vector<DataValue>* values, bool log, SRCE )noexcept(false)->uint;

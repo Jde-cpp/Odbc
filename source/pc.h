@@ -1,19 +1,17 @@
 //#include <string_view>
 #if _MSC_VER
+	#undef NTDDI_VERSION
+	#define NTDDI_VERSION NTDDI_WIN10_RS1 // work around linker failure MapViewOfFileNuma2@36
 	#ifndef __INTELLISENSE__ 
-		
 		#define WIN32_LEAN_AND_MEAN
 		#include	<windows.h>
-//		#include <basetsd.h>
 		#include <sqltypes.h>
 		#include <sql.h>
 		#include <sqlext.h>
 	#endif
 #else
-//	#include <iodbc/iodbcunix.h>
 	#include <sqltypes.h>
 	#include <sql.h>
-//	#include <iodbc/sqlucode.h>
 	#include <sqlext.h>
 #endif
 #pragma warning( disable : 4245) 
@@ -29,12 +27,3 @@
 
 #include "TypeDefs.h"
 #include "../../Framework/source/DateTime.h"
-/*
-#include <variant>
-#include <numeric>
-#include <forward_list>
-#include <valarray>
-
-#include "../../Framework/source/db/DataSource.h"
-#include "../../Framework/source/db/DataType.h"
-*/

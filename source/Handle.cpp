@@ -15,7 +15,7 @@ namespace Jde::DB::Odbc
 		{
 			CALL( nullptr, SQL_HANDLE_ENV, SQLSetEnvAttr(nullptr, SQL_ATTR_CONNECTION_POOLING, (SQLPOINTER)SQL_CP_ONE_PER_HENV, 0), "SQLSetEnvAttr(SQL_ATTR_CONNECTION_POOLING)" );
 			SQLHENV handle;
-			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IFX( rc==SQL_ERROR, DBException("({}) - Unable to allocate an environment handle", rc) );
+			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IF( rc==SQL_ERROR, "({}) - Unable to allocate an environment handle", rc );
 			CALL( handle, SQL_HANDLE_ENV, SQLSetEnvAttr(handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0), "SQLSetEnvAttr(SQL_ATTR_ODBC_VERSION)" );
 			_handle = shared_ptr<void>{ handle, [](SQLHENV h)
 			{

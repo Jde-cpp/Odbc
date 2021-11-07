@@ -19,19 +19,19 @@ namespace Jde::DB::Odbc
 		
 		β Data()noexcept->void* = 0;
 		β GetDataValue()const->DataValue=0;
-		[[noreturn]] virtual bool GetBit()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType) ); }
-		[[noreturn]] virtual string to_string()const{ THROWX( DBException("to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
-		[[noreturn]] virtual int64_t GetInt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetInt", DBType, CodeType) ); }
-		[[noreturn]] virtual int32_t GetInt32()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetInt32", DBType, CodeType) ); }
-		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={} {}", "GetIntOpt", DBType, CodeType, GetTypeName<decltype(this)>()) ); }
-		[[noreturn]] virtual double GetDouble()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDouble", DBType, CodeType) ); }
+		[[noreturn]] β GetBit()const->bool{ THROW( "{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType ); }
+		[[noreturn]] virtual string to_string()const{ THROW( "to_string not implemented for DBType='{}' CodeType='{}' {}", DBType, CodeType, GetTypeName<decltype(this)>() ); }
+		[[noreturn]] virtual int64_t GetInt()const{ THROW( "{} not implemented for DBType={} CodeType={}", "GetInt", DBType, CodeType ); }
+		[[noreturn]] virtual int32_t GetInt32()const{ THROW( "{} not implemented for DBType={} CodeType={}", "GetInt32", DBType, CodeType ); }
+		[[noreturn]] virtual std::optional<_int> GetIntOpt()const{ THROW( "{} not implemented for DBType={} CodeType={} {}", "GetIntOpt", DBType, CodeType, GetTypeName<decltype(this)>() ); }
+		[[noreturn]] virtual double GetDouble()const{ THROW( "{} not implemented for DBType={} CodeType={}", "GetDouble", DBType, CodeType ); }
 		virtual float GetFloat()const{ return static_cast<float>( GetDouble() ); }
-		[[noreturn]] β GetDoubleOpt()const->std::optional<double>{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDoubleOpt", DBType, CodeType) ); }
-		[[noreturn]] β GetDateTime()const->DBDateTime{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDateTime", DBType, CodeType) ); }
-		[[noreturn]] β GetDateTimeOpt()const->std::optional<DBDateTime>{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetDateTimeOpt", DBType, CodeType) ); }
-		[[noreturn]] virtual uint GetUInt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={}", "GetUInt", DBType, CodeType) ); }
+		[[noreturn]] β GetDoubleOpt()const->std::optional<double>{ THROW( "{} not implemented for DBType={} CodeType={}", "GetDoubleOpt", DBType, CodeType ); }
+		[[noreturn]] β GetDateTime()const->DBDateTime{ THROW( "{} not implemented for DBType={} CodeType={}", "GetDateTime", DBType, CodeType ); }
+		[[noreturn]] β GetDateTimeOpt()const->std::optional<DBDateTime>{ THROW( "{} not implemented for DBType={} CodeType={}", "GetDateTimeOpt", DBType, CodeType); }
+		[[noreturn]] virtual uint GetUInt()const{ THROW( "{} not implemented for DBType={} CodeType={}", "GetUInt", DBType, CodeType); }
 		virtual uint32_t GetUInt32(uint position )const{ return static_cast<uint32_t>(GetUInt()); }
-		[[noreturn]] virtual std::optional<uint> GetUIntOpt()const{ THROWX( DBException("{} not implemented for DBType={} CodeType={} - {}", "GetUIntOpt", DBType, CodeType, GetTypeName<decltype(this)>() ) ); };
+		[[noreturn]] virtual std::optional<uint> GetUIntOpt()const{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "GetUIntOpt", DBType, CodeType, GetTypeName<decltype(this)>() ); };
 		bool IsNull()const{ return Output==SQL_NULL_DATA; }
 		virtual SQLULEN Size()const noexcept{return 0;}
 		virtual SQLSMALLINT DecimalDigits()const noexcept{return 0;}
@@ -290,7 +290,7 @@ namespace Jde::DB::Odbc
 		else if( type==SQL_NUMERIC )
 			pBinding = make_unique<BindingNumeric>();
 		else
-			THROWX( DBException("Binding type '{}' is not implemented.", type) );
+			THROW( "Binding type '{}' is not implemented.", type );
 		return pBinding;
 	}
 	using std::get;
