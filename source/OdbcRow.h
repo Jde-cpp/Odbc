@@ -10,20 +10,20 @@ namespace Jde::DB::Odbc
 		OdbcRow( const vector<up<Binding>>& bindings );
 		void Reset()const{_index=0;}
 
-		α operator[]( uint value )const->DataValue override;
-		bool GetBit( uint position )const override;
-		std::string GetString( uint position )const override;
-		CIString GetCIString( uint i )const override{ return CIString{GetString(i)}; }
-		int64_t GetInt( uint position )const override;
-		int32_t GetInt32( uint position )const override;
-		std::optional<_int> GetIntOpt( uint position )const override;
-		double GetDouble( uint position )const override;
+		α operator[]( uint value )const->object override;
+		bool GetBit( uint position, SRCE )const override;
+		std::string GetString( uint position, SRCE )const override;
+		CIString GetCIString( uint i, SRCE )const override{ return CIString{GetString(i)}; }
+		int64_t GetInt( uint position, SRCE )const override;
+		int32_t GetInt32( uint position, SRCE )const override;
+		std::optional<_int> GetIntOpt( uint position, SRCE )const override;
+		double GetDouble( uint position, SRCE )const override;
 		float GetFloat( uint position )const{ return static_cast<float>( GetDouble(position) ); }
-		std::optional<double> GetDoubleOpt( uint position )const override;
-		DBDateTime GetDateTime( uint position )const override;
-		std::optional<DBDateTime> GetDateTimeOpt( uint position )const override;
-		uint GetUInt( uint position )const override;
-		std::optional<uint> GetUIntOpt( uint position )const override;
+		std::optional<double> GetDoubleOpt( uint position, SRCE )const override;
+		DBTimePoint GetTimePoint( uint position, SRCE )const override;
+		std::optional<DBTimePoint> GetTimePointOpt( uint position, SRCE )const override;
+		uint GetUInt( uint position, SRCE )const override;
+		std::optional<uint> GetUIntOpt( uint position, SRCE )const override;
 	private:
 		const vector<up<Binding>>& _bindings;
 	};
@@ -32,20 +32,20 @@ namespace Jde::DB::Odbc
 		OdbcRow2( const vector<Binding>& bindings )noexcept:_bindings{bindings}{};
 		void Reset()const noexcept{_index=0;}
 
-		α operator[]( uint position )const noexcept->DataValue override{ ASSERT( position<_bindings.size() );  return _bindings[position].GetDataValue(); }
-		bool GetBit( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetBit(); }
-		std::string GetString( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].to_string(); }
-		CIString GetCIString( uint i )const noexcept override{ return CIString{GetString(i)}; }
-		int64_t GetInt( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetInt(); }
-		int32_t GetInt32( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetInt32(); }
-		std::optional<_int> GetIntOpt( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetIntOpt(); }
-		double GetDouble( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDouble(); }
+		α operator[]( uint position )const noexcept->object override{ ASSERT( position<_bindings.size() );  return _bindings[position].GetDataValue(); }
+		bool GetBit( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetBit(); }
+		std::string GetString( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].to_string(); }
+		CIString GetCIString( uint i, SRCE )const noexcept override{ return CIString{GetString(i)}; }
+		int64_t GetInt( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetInt(); }
+		int32_t GetInt32( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetInt32(); }
+		std::optional<_int> GetIntOpt( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetIntOpt(); }
+		double GetDouble( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDouble(); }
 		float GetFloat( uint position )const noexcept{ return static_cast<float>( GetDouble(position) ); }
-		std::optional<double> GetDoubleOpt( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDoubleOpt(); }
-		DBDateTime GetDateTime( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDateTime(); }
-		std::optional<DBDateTime> GetDateTimeOpt( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDateTimeOpt(); }
-		uint GetUInt( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetUInt(); }
-		std::optional<uint> GetUIntOpt( uint position )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetUIntOpt(); }
+		std::optional<double> GetDoubleOpt( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDoubleOpt(); }
+		DBTimePoint GetTimePoint( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDateTime(); }
+		std::optional<DBTimePoint> GetTimePointOpt( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetDateTimeOpt(); }
+		uint GetUInt( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetUInt(); }
+		std::optional<uint> GetUIntOpt( uint position, SRCE )const noexcept override{ ASSERT( position<_bindings.size() ); return _bindings[position].GetUIntOpt(); }
 	private:
 		const vector<Binding>& _bindings;
 	};

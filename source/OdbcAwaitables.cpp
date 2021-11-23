@@ -11,35 +11,35 @@ namespace Jde::DB::Odbc
 	{
 		try
 		{
-			if( Asynchronous )
+/*			if( Asynchronous )
 			{
 				CALL( Session, SQL_HANDLE_DBC, SQLSetConnectAttr(Session, SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE, (SQLPOINTER)SQL_ASYNC_DBC_ENABLE_ON, SQL_IS_INTEGER), "SQLSetConnectAttr(SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE)" );
 				CALL( Session, SQL_HANDLE_DBC, SQLSetConnectAttr(Session, SQL_ATTR_ASYNC_DBC_EVENT, Session.Event(), SQL_IS_POINTER), "SQLSetConnectAttr(SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE)" );
 				CALL( Session, SQL_HANDLE_DBC, SQLDriverConnect(Session, nullptr, (SQLCHAR*)string(ConnectionString).c_str(), SQL_NTS, nullptr, 0,nullptr, SQL_DRIVER_NOPROMPT), "SQLDriverConnect" );
 			}
-			else
+			else*/
 				Session.Connect( ConnectionString );
 		}
-		catch( const DBException& e )
+		catch( DBException& e )
 		{
-			ExceptionPtr = std::make_exception_ptr( e );
+			ExceptionPtr = e.Clone();
 		}
 		catch( ... )
 		{
-			DBG( "here"sv );
+			CRITICAL( "Unexpected Exception"sv );
 		}
 		return ExceptionPtr!=nullptr;
 	}
 	α ConnectAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
 	{
-		if( Asynchronous )
+/*		if( Asynchronous )
 			OdbcWorker::Push( move(h), Session.Event(), false );
-		else
+		else*/
 			CoroutinePool::Resume( move(h) );
 	}
 	α ConnectAwaitable::await_resume()noexcept->TaskResult
 	{
-		if( Asynchronous && !ExceptionPtr  )
+		/*if( Asynchronous && !ExceptionPtr  )
 		{
 			try
 			{
@@ -52,7 +52,7 @@ namespace Jde::DB::Odbc
 			{
 				ExceptionPtr = std::make_exception_ptr( move(e) );
 			}
-		}
+		}*/
 		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleSessionAsync>(move(Session)) };
 	}
 
@@ -80,9 +80,9 @@ namespace Jde::DB::Odbc
 			}
 			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLExecDirect(h, (SQLCHAR*)_sql.data(), static_cast<SQLINTEGER>(_sql.size())), "SQLExecDirect" ); 
 		}
-		catch( const DBException& e )
+		catch( DBException& e )
 		{
-			ExceptionPtr = std::make_exception_ptr( e );
+			ExceptionPtr = e.Clone();
 		}
 		return !Statement.IsAsynchronous() || ExceptionPtr!=nullptr;
 	}
@@ -101,9 +101,9 @@ namespace Jde::DB::Odbc
 				THROW_IF( !SQL_SUCCEEDED(completeAsyncResult), "SQLCompleteAsync returned {} - {}", completeAsyncResult, ::GetLastError() );
 				THROW_IF( !SQL_SUCCEEDED(statementResult), "SQLDriverConnect retunred {} - {}", statementResult, ::GetLastError() );
 			}
-			catch( const Exception& e )
+			catch( Exception& e )
 			{
-				ExceptionPtr = std::make_exception_ptr( move(e) );
+				ExceptionPtr = e.Clone();
 			}
 		}
 		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleStatementAsync>(move(Statement)) };
@@ -146,7 +146,7 @@ namespace Jde::DB::Odbc
 						break;
 					THROW_IF( !SQL_SUCCEEDED(hr), "SQLFetch returned {} - {}", hr, GetLastError() );
 					row.Reset();
-					_function( row );
+					_function->OnRow( row );
 				}
 				//for( ; i<statuses.size() && SQL_SUCCEEDED( statuses[i] ); ++Statement._result )
 				//{
@@ -163,9 +163,9 @@ namespace Jde::DB::Odbc
 				//}
 				//Statement._moreRows = statuses.size() && i==statuses.size();
 			}
-			catch( const Exception& e )
+			catch( IException& e )
 			{
-				ExceptionPtr = std::make_exception_ptr( move(e) );
+				ExceptionPtr = e.Clone();
 			}
 		}
 		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleStatementAsync>(move(Statement)) };

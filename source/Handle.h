@@ -19,7 +19,7 @@ namespace Jde::DB::Odbc
 	};
 */
 	//template<typename T>
-	//using SharedHandle = std::shared_ptr<T,std::function<void(T)>>;
+	//using SharedHandle = sp<T,std::function<void(T)>>;
 
 	struct HandleEnvironment final: boost::noncopyable
 	{
@@ -29,7 +29,7 @@ namespace Jde::DB::Odbc
 
 		operator SQLHENV()const noexcept{ return _handle.get(); }
 	private:
-		static std::shared_ptr<void> _handle;
+		static sp<void> _handle;
 	};
 
 	struct HandleSession : boost::noncopyable
@@ -60,7 +60,7 @@ namespace Jde::DB::Odbc
 	};	
 	struct HandleStatement : boost::noncopyable
 	{
-		HandleStatement( sv connectionString )noexcept(false);
+		HandleStatement( string connectionString )noexcept(false);
 		HandleStatement( HandleStatement&& rhs )noexcept:_handle{move(rhs._handle)}, _session{move(rhs._session)}{ rhs._handle=nullptr; };
 		~HandleStatement();
 		operator SQLHSTMT()const noexcept{ return _handle; }

@@ -8,7 +8,7 @@
 #define var const auto
 namespace Jde::DB::Odbc
 {
-	shared_ptr<void> HandleEnvironment::_handle; 
+	sp<void> HandleEnvironment::_handle; 
 	HandleEnvironment::HandleEnvironment()noexcept(false)
 	{
 		if( !_handle )
@@ -17,7 +17,7 @@ namespace Jde::DB::Odbc
 			SQLHENV handle;
 			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IF( rc==SQL_ERROR, "({}) - Unable to allocate an environment handle", rc );
 			CALL( handle, SQL_HANDLE_ENV, SQLSetEnvAttr(handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0), "SQLSetEnvAttr(SQL_ATTR_ODBC_VERSION)" );
-			_handle = shared_ptr<void>{ handle, [](SQLHENV h)
+			_handle = sp<void>{ handle, [](SQLHENV h)
 			{
 			}};
 		}
@@ -64,8 +64,8 @@ namespace Jde::DB::Odbc
 		}
 	}
 
-	HandleStatement::HandleStatement( sv connectionString )noexcept(false):
-		_session{ connectionString }
+	HandleStatement::HandleStatement( string cs )noexcept(false):
+		_session{ move(cs) }
 	{
 		CALL( _session, SQL_HANDLE_DBC, SQLAllocHandle(SQL_HANDLE_STMT, _session, &_handle), "SQLAllocHandle" );
 	}

@@ -1,4 +1,4 @@
-#include "MsSqlSchemaProc.h"
+﻿#include "MsSqlSchemaProc.h"
 #include <jde/Str.h>
 #include "../../../Framework/source/db/Row.h"
 #include "MsSqlStatements.h"
@@ -8,21 +8,21 @@
 namespace Jde::DB::MsSql
 {
 
-	MapPtr<string,Table> MsSqlSchemaProc::LoadTables( sv schema )noexcept(false)
+	α MsSqlSchemaProc::LoadTables( sv schema )noexcept(false)->up<flat_map<string,Table>>
 	{
 		if( schema.empty() )
 			schema = "dbo"sv;/*_pDataSource->Catalog( MsSql::Sql::CatalogSql )*/;
-		auto pTables = make_shared<map<string,Table>>();
+		auto pTables = mu<flat_map<string,Table>>();
 		//std::function<void(str name, str COLUMN_NAME, int ordinalPosition, str dflt, int isNullable, str type, int maxLength, int isIdentity, int isId, int NumericPrecision, int NumericScale)>
 		auto result2 = [&]( sv tableName, sv name, _int ordinalPosition, sv dflt, sv isNullable, sv type, optional<_int> maxLength, _int isIdentity, _int isId, optional<_int> numericPrecision, optional<_int> numericScale )
 		{
 			auto& table = pTables->emplace( tableName, Table{schema,tableName} ).first->second;
 			table.Columns.resize( ordinalPosition );
-			var dataType = ToDataType(type);
+			var dataType = ToType(type);
 			string defaultParsed;
 			if( !dflt.empty() )
 			{
-				if( dataType==DataType::Int )
+				if( dataType==EType::Int )
 				{
 					var start = dflt.find_first_of( '\'' );
 					var end = dflt.find_last_of( '\'' );
@@ -72,11 +72,11 @@ namespace Jde::DB::MsSql
 			pColumns->push_back( columnName );
 		};
 
-		std::vector<DataValue> values{schema};
+		std::vector<object> values{schema};
 		if( tableName.size() )
 			values.push_back( tableName );
 		var sql = Sql::IndexSql( tableName.size() );
-		_pDataSource->Select( sql, result, values, true );
+		_pDataSource->Select( sql, result, values );
 
 		return indexes;
 	}
@@ -85,7 +85,7 @@ namespace Jde::DB::MsSql
 	{
 		if( schema.empty() )
 			schema = "dbo"sv;// _pDataSource->Catalog( MsSql::Sql::CatalogSql );
-		//std::vector<DataValue> params;
+		//std::vector<object> params;
 		//if( schema.size() )
 		//	params.emplace_back( schema );
 		flat_map<string,Procedure> values;
@@ -94,59 +94,59 @@ namespace Jde::DB::MsSql
 			string name = row.GetString(0);
 			values.try_emplace( name, Procedure{name} );
 		};
-		_pDataSource->Select( Sql::ProcSql(true), fnctn, {schema}, true );
+		_pDataSource->Select( Sql::ProcSql(true), fnctn, {schema} );
 		return values;
 	}
 
-	DataType MsSqlSchemaProc::ToDataType( sv typeName )noexcept
+	EType MsSqlSchemaProc::ToType( sv typeName )noexcept
 	{
-		DataType type{ DataType::None };
+		EType type{ EType::None };
 		if(typeName=="datetime")
-			type=DataType::DateTime;
+			type=EType::DateTime;
 		else if( typeName=="smalldatetime" )
-			type=DataType::SmallDateTime;
+			type=EType::SmallDateTime;
 		else if(typeName=="float")
-			type=DataType::Float;
+			type=EType::Float;
 		else if(typeName=="real")
-			type=DataType::SmallFloat;
+			type=EType::SmallFloat;
 		else if( typeName=="int" )
-			type = DataType::Int;
+			type = EType::Int;
 		else if( Str::StartsWith(typeName, "bigint") )
-			type=DataType::Long;
+			type=EType::Long;
 		else if( typeName=="nvarchar" )
-			type=DataType::VarWChar;
+			type=EType::VarWChar;
 		else if(typeName=="nchar")
-			type=DataType::WChar;
+			type=EType::WChar;
 		else if( Str::StartsWith(typeName, "smallint") )
-			type=DataType::Int16;
+			type=EType::Int16;
 		else if(typeName=="tinyint")
-			type=DataType::Int8;
+			type=EType::Int8;
 		else if( typeName=="tinyint unsigned" )
-			type=DataType::UInt8;
+			type=EType::UInt8;
 		else if( typeName=="uniqueidentifier" )
-			type=DataType::Guid;
+			type=EType::Guid;
 		else if(typeName=="varbinary")
-			type=DataType::VarBinary;
+			type=EType::VarBinary;
 		else if( Str::StartsWithInsensitive(typeName, "varchar") )
-			type=DataType::VarChar;
+			type=EType::VarChar;
 		else if(typeName=="ntext")
-			type=DataType::NText;
+			type=EType::NText;
 		else if(typeName=="text")
-			type=DataType::Text;
+			type=EType::Text;
 		else if(typeName=="char")
-			type=DataType::Char;
+			type=EType::Char;
 		else if(typeName=="image")
-			type=DataType::Image;
+			type=EType::Image;
 		else if(Str::StartsWith(typeName, "bit") )
-			type=DataType::Bit;
+			type=EType::Bit;
 		else if( Str::StartsWith(typeName, "binary") )
-			type=DataType::Binary;
+			type=EType::Binary;
 		else if( Str::StartsWith(typeName, "decimal") )
-			type=DataType::Decimal;
+			type=EType::Decimal;
 		else if(typeName=="numeric")
-			type=DataType::Numeric;
+			type=EType::Numeric;
 		else if(typeName=="money")
-			type=DataType::Money;
+			type=EType::Money;
 		else
 			WARN( "Unknown datatype({}).  need to implement, no big deal if not our table.", typeName );
 		return type;
@@ -167,7 +167,7 @@ namespace Jde::DB::MsSql
 			else
 				pExisting->second.Columns.push_back( column );
 		};
-		_pDataSource->Select( Sql::ForeignKeySql(schema.size()), result, {schema}, true );
+		_pDataSource->Select( Sql::ForeignKeySql(schema.size()), result, {schema} );
 		return fks;
 	}
 /*	Schema LoadSchema( IDataSource& ds, sv schema )noexcept(false) override;

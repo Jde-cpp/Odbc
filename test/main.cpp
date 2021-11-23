@@ -4,7 +4,7 @@
 //#include "../../Framework/source/Settings.h"
 //#include "../../Framework/source/Cache.h"
 #define var const auto
-template<class T> using sp = std::shared_ptr<T>;
+//template<class T> using sp = std::shared_ptr<T>;
 template<typename T>
 constexpr auto ms = std::make_shared<T>;
 
