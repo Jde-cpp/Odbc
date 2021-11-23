@@ -1,7 +1,8 @@
-//#include <string_view>
+
+#include "TypeDefs.h"
 #if _MSC_VER
-	#undef NTDDI_VERSION
-	#define NTDDI_VERSION NTDDI_WIN10_RS1 // work around linker failure MapViewOfFileNuma2@36
+//	#undef NTDDI_VERSION
+//	#define NTDDI_VERSION NTDDI_WIN10_RS1 // work around linker failure MapViewOfFileNuma2@36
 	#ifndef __INTELLISENSE__ 
 		#define WIN32_LEAN_AND_MEAN
 		#include	<windows.h>
@@ -25,5 +26,4 @@
 	#include <spdlog/fmt/ostr.h>
 #endif
 
-#include "TypeDefs.h"
 #include "../../Framework/source/DateTime.h"
