@@ -86,5 +86,8 @@
     <ClInclude Include="OdbcWorker.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="Binding.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
 </Project>

@@ -2,24 +2,12 @@
 #include <jde/Log.h>
 #include <boost/noncopyable.hpp>
 #include "Bindings.h"
+#include "../../Framework/source/Settings.h"
 
 namespace Jde::DB{ struct IRow; }
 namespace Jde::DB::Odbc
 {
 	struct FetchAwaitable; struct OdbcDataSource;
-	//namespace 
-//	using HANDLE=void*;
-/*	template<typename T>
-	struct Handle
-	{
-		Handle( function<T()>& constructor, function<void(const T&)>& destructor ):_constructor{destructor}, _constructor{destructor}
-	private:
-		function<T()> _constructor;
-		function<void(const T&)> _destructor;
-	};
-*/
-	//template<typename T>
-	//using SharedHandle = sp<T,std::function<void(T)>>;
 
 	struct HandleEnvironment final: boost::noncopyable
 	{
@@ -70,7 +58,7 @@ namespace Jde::DB::Odbc
 	};
 	struct HandleStatementAsync : boost::noncopyable
 	{
-		HandleStatementAsync( HandleSessionAsync&& session )noexcept(false):_rowStatus(1024),_event{ session.IsAsynchronous() ? ::CreateEvent(nullptr, false, false, nullptr) : nullptr},_session{ move(session) }{};
+		HandleStatementAsync( HandleSessionAsync&& session )noexcept(false):_rowStatus{ new SQLUSMALLINT[ChunkSize] }, _event{ session.IsAsynchronous() ? ::CreateEvent(nullptr, false, false, nullptr) : nullptr}, _session{ move(session) }{};
 		HandleStatementAsync( HandleStatementAsync&& rhs )noexcept:_bindings{move(rhs._bindings)}, _rowStatus{move(rhs._rowStatus)}, _result{rhs._result}, _moreRows{rhs._moreRows}, _event{move(rhs._event)}, _handle{move(rhs._handle)}, _session{move(rhs._session)}{ rhs._handle=nullptr; }
 		~HandleStatementAsync();
 		
@@ -78,17 +66,19 @@ namespace Jde::DB::Odbc
 		α Event()noexcept{ return _event; }
 		operator SQLHSTMT()const noexcept{ return _handle; }
 		α& Session()noexcept{ return _session; }
-		α Bindings()noexcept(false)->const vector<up<Binding>>&;
-		const α& RowStatuses()const noexcept{ return _rowStatus;}
+		α OBindings()noexcept(false)->const vector<up<IBindings>>&;
+		α RowStatuses()noexcept->SQLUSMALLINT*{ return _rowStatus.get();}
+		α RowStatusesSize()const noexcept->uint{ return ChunkSize; }
 		bool IsAsynchronous()const noexcept{ return _session.IsAsynchronous(); }
 	private:
-		vector<up<Binding>> _bindings;
-		vector<SQLUSMALLINT> _rowStatus;
+		vector<up<IBindings>> _bindings;
+		up<SQLUSMALLINT[]> _rowStatus;
 		uint _result{0};
 		bool _moreRows{true};
 		HANDLE _event{ nullptr };
 		SQLHSTMT _handle{nullptr};
 		HandleSessionAsync _session;
+		static uint ChunkSize;
 		friend FetchAwaitable; friend OdbcDataSource;
 	};
 }

@@ -3,6 +3,7 @@
 #include "../../Framework/source/coroutine/Awaitable.h"
 #include "../../Framework/source/db/DataSource.h"
 #include "OdbcAwaitables.h"
+#include "Binding.h"
 
 extern "C" JDE_ODBC_VISIBILITY Jde::DB::IDataSource* GetDataSource(); 
 
@@ -19,7 +20,7 @@ namespace Jde::DB::Odbc
 		α ExecuteProc( string sql, const std::vector<object>& parameters, SRCE )noexcept(false)->uint override;
 		α ExecuteProc( string sql, const std::vector<object>& parameters, RowΛ f, SRCE )noexcept(false)->uint override;
 
-		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint;
+		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint override;
 		//α Select( string sql, RowΛ* f, const std::vector<object>* values, SRCE )noexcept(false)->uint override;
 		//ⓣ ScalerCo( sv sql, const vector<object>&& parameters={} )noexcept(false)->FunctionAwaitable;//sp<T>
 		//ⓣ ScalerNullCo( string&& sql, const vector<object>&& parameters )noexcept(false)->Task2;//sp<optional<T>>

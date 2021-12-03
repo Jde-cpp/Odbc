@@ -8,6 +8,8 @@
 #define var const auto
 namespace Jde::DB::Odbc
 {
+	uint HandleStatementAsync::ChunkSize{ Settings::TryGet<uint>( "db/chunkSize" ).value_or(1024) };
+
 	sp<void> HandleEnvironment::_handle; 
 	HandleEnvironment::HandleEnvironment()noexcept(false)
 	{
@@ -17,9 +19,7 @@ namespace Jde::DB::Odbc
 			SQLHENV handle;
 			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IF( rc==SQL_ERROR, "({}) - Unable to allocate an environment handle", rc );
 			CALL( handle, SQL_HANDLE_ENV, SQLSetEnvAttr(handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0), "SQLSetEnvAttr(SQL_ATTR_ODBC_VERSION)" );
-			_handle = sp<void>{ handle, [](SQLHENV h)
-			{
-			}};
+			_handle = sp<void>{ handle, [](SQLHENV h){} };
 		}
 	}
 
@@ -83,28 +83,32 @@ namespace Jde::DB::Odbc
 		var rc = _handle ? ::SQLFreeHandle( SQL_HANDLE_STMT, _handle ) : SQL_SUCCESS;
 		WARN_IF( rc!=SQL_SUCCESS, "SQLFreeHandle(SQL_HANDLE_STMT) returned {} - {}", rc, ::GetLastError() );
 	}
-	α HandleStatementAsync::Bindings()noexcept(false)->const vector<up<Binding>>&
+	α HandleStatementAsync::OBindings()noexcept(false)->const vector<up<IBindings>>&
 	{
 		if( !_bindings.size() )
 		{
 			SQLSMALLINT columnCount;
 			CALL( _handle, SQL_HANDLE_STMT, SQLNumResultCols(_handle,&columnCount), "SQLNumResultCols" );
-			_bindings.reserve( columnCount );
-			for( SQLSMALLINT iCol = 1; iCol <= columnCount; ++iCol )
+			if( columnCount )
 			{
-				SQLLEN ssType;
-				CALL( _handle, SQL_HANDLE_STMT, ::SQLColAttribute(_handle, iCol, SQL_DESC_CONCISE_TYPE, NULL, 0, NULL, &ssType), "SQLColAttribute::Concise" );
-
-				SQLLEN bufferSize = 0;
-				if( ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR || ssType == -9/*varchar(max)?*/ )
+				_bindings.reserve( columnCount );
+				var rowCount = RowStatusesSize(); //for( ; rowCount<RowStatusesSize() && _rowStatus[rowCount]==0 ; ++rowCount );
+				for( SQLSMALLINT iCol = 1; iCol <= columnCount; ++iCol )
 				{
-					CALL( _handle, SQL_HANDLE_STMT, ::SQLColAttribute(_handle, iCol, SQL_DESC_DISPLAY_SIZE, NULL, 0, NULL, &bufferSize), "SQLColAttribute::Display" );
-					if( ssType==-9 && bufferSize==0 )
-						bufferSize = (1 << 14) - 1;//TODO handle varchar(max).
-					_bindings.emplace_back( make_unique<BindingString>((SQLSMALLINT)ssType, ++bufferSize) );
+					SQLLEN ssType;
+					CALL( _handle, SQL_HANDLE_STMT, ::SQLColAttribute(_handle, iCol, SQL_DESC_CONCISE_TYPE, NULL, 0, NULL, &ssType), "SQLColAttribute::Concise" );
+
+					if( ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR || ssType == -9/*varchar(max)?*/ )
+					{
+						SQLLEN bufferSize = 0;
+						CALL( _handle, SQL_HANDLE_STMT, ::SQLColAttribute(_handle, iCol, SQL_DESC_DISPLAY_SIZE, NULL, 0, NULL, &bufferSize), "SQLColAttribute::Display" );
+						if( ssType==-9 && bufferSize==0 )
+							bufferSize = (1 << 14) - 1;//TODO handle varchar(max).
+						_bindings.emplace_back( IBindings::Create((SQLSMALLINT)ssType, rowCount, ++bufferSize) );
+					}
+					else
+						_bindings.emplace_back( IBindings::Create((SQLSMALLINT)ssType,rowCount) );
 				}
-				else
-					_bindings.emplace_back( Binding::GetBinding((SQLSMALLINT)ssType) );
 			}
 		}
 		return _bindings;

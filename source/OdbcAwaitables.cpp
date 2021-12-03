@@ -63,8 +63,8 @@ namespace Jde::DB::Odbc
 			SQLHSTMT h;
 			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLAllocHandle(SQL_HANDLE_STMT, Statement.Session(), &h), "SQLAllocHandle" );
 			Statement.SetHandle( h );
-			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER)Statement.RowStatuses().size(), 0), "SQLSetStmtAttr(SQL_ATTR_ROW_ARRAY_SIZE)" );
-			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ROW_STATUS_PTR, (SQLPOINTER)Statement.RowStatuses().data(), 0), "SQLSetStmtAttr(SQL_ATTR_ROW_STATUS_PTR)" );
+			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER)Statement.RowStatusesSize(), 0), "SQLSetStmtAttr(SQL_ATTR_ROW_ARRAY_SIZE)" );
+			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ROW_STATUS_PTR, (SQLPOINTER)Statement.RowStatuses(), 0), "SQLSetStmtAttr(SQL_ATTR_ROW_STATUS_PTR)" );
 			if( Statement.IsAsynchronous() )
 			{
 				CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ASYNC_ENABLE, (SQLPOINTER)SQL_ASYNC_ENABLE_ON, SQL_IS_POINTER), "SQLSetStmtAttr(SQL_ASYNC_ENABLE_ON)" );
@@ -78,7 +78,7 @@ namespace Jde::DB::Odbc
 					var result = ::SQLBindParameter( Statement, ++i, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, pBinding->Size(), pBinding->DecimalDigits(),  pBinding->Data(), pBinding->BufferLength(), &pBinding->Output );  THROW_IFX( result<0, DBException(result, _sql, nullptr, format("parameter {} returned {} - {}", i-1, result, ::GetLastError()), SRCE_CUR) );
 				}
 			}
-			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLExecDirect(h, (SQLCHAR*)_sql.data(), static_cast<SQLINTEGER>(_sql.size())), "SQLExecDirect" ); 
+			CALL( Statement.Session(), SQL_HANDLE_DBC, ::SQLExecDirect(h, (SQLCHAR*)_sql.data(), static_cast<SQLINTEGER>(_sql.size())), "SQLExecDirect" ); 
 		}
 		catch( DBException& e )
 		{
@@ -133,35 +133,40 @@ namespace Jde::DB::Odbc
 		{
 			try
 			{
-				auto& bindings = Statement.Bindings();
-				SQLUSMALLINT i=0;
-				for( var& pBinding : bindings )
-					CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, ++i, (SQLSMALLINT)pBinding->CodeType, pBinding->Data(), pBinding->BufferLength(), &pBinding->Output), "SQLBindCol" );
+				var& bindings = Statement.OBindings();
 
-				OdbcRow row{ bindings };
-				for(;;)
+/*				BindingInt32s ib{5};
+				//SQLLEN ids[50]={0};
+				CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 1, (SQLSMALLINT)ib.CodeType(), ib.Data(), ib.BufferLength(), ib.OutputPtr()), "SQLBindCol" );
+				BindingStrings<SQL_CHAR> sb{5, 256};
+				SQLLEN l = sb.BufferLength();
+				SQLLEN x[50]={0};
+				char sz[256][256];
+				//DBG( "sizeof={:x} data={:x}, DBType={:x}, CodeType={:x} Output={:x} Buffer={:x} size={:x}", sizeof(BindingString), (uint16)&sb, (uint16)&sb.DBType, (uint16)&sb.CodeType, (uint16)&sb.Output, (uint16)&sb._pBuffer, (uint16)&sb._size );
+				var hr2 = ::SQLBindCol( Statement, 2, (SQLSMALLINT)sb.CodeType(), sz, 10, x );//sb.BufferLength()
+				//CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 2, (SQLSMALLINT)sb.CodeType, sb.Data(), sb.BufferLength(), &sb.Output), "SQLBindCol" );
+				var hr3 = ::SQLFetch( Statement ); 
+				*/
+				SQLUSMALLINT i=0;
+				for( var& p : bindings )
+					CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, ++i, (SQLSMALLINT)p->CodeType(), p->Data(), p->BufferLength(), p->OutputPtr()), "SQLBindCol" );
+
+				OdbcRowMulti row( bindings );
+				HRESULT hr;
+				while( (hr = ::SQLFetch(Statement))==SQL_SUCCESS || hr==SQL_SUCCESS_WITH_INFO )
 				{
-					var hr = ::SQLFetch( Statement ); 
-					if( hr==SQL_NO_DATA_FOUND )
+					uint i=0;
+					for( ; i<Statement.RowStatusesSize() && Statement.RowStatuses()[i]==SQL_ROW_SUCCESS; ++i )
+					{
+						_function->OnRow( row );
+						row.Reset();
+					}
+					if( i<Statement.RowStatusesSize() && Statement.RowStatuses()[i]==SQL_ROW_NOROW )
 						break;
-					THROW_IF( !SQL_SUCCEEDED(hr), "SQLFetch returned {} - {}", hr, GetLastError() );
-					row.Reset();
-					_function->OnRow( row );
+					ASSERT( i==Statement.RowStatusesSize() || Statement.RowStatuses()[i]!=SQL_ROW_ERROR );//allocate more space.
+					row.ResetRowIndex();
 				}
-				//for( ; i<statuses.size() && SQL_SUCCEEDED( statuses[i] ); ++Statement._result )
-				//{
-				//	//CALL( Statement, SQL_HANDLE_STMT, ::SQLSetPos(Statement, ++i, SQL_POSITION, SQL_LOCK_NO_CHANGE), "SQLSetPos" ); 
-				//	//var hr = ;
-				//	//THROW_IF( !SQL_SUCCEEDED(hr), "SQLSetPos returned {} - {}", hr, GetLastError() );
-				//	SQLUSMALLINT j=0;
-				//	for( auto& p : bindings )
-				//	{
-				//		CALL( Statement, SQL_HANDLE_STMT, ::SQLGetData(Statement, ++j, p->CodeType, p->Data(), p->Size(), &p->Output), "SQLGetData" ); 
-				//	}
-				//	row.Reset();
-				//	_function( row );
-				//}
-				//Statement._moreRows = statuses.size() && i==statuses.size();
+				THROW_IF( hr!=SQL_NO_DATA && !SQL_SUCCEEDED(hr), "SQLFetch returned {} - {}", hr, GetLastError() );
 			}
 			catch( IException& e )
 			{

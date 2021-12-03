@@ -3,12 +3,13 @@
 #include <jde/coroutine/Task.h>
 #include "../../Framework/source/coroutine/Awaitable.h"
 #include "../../Framework/source/db/DataSource.h"
+#include "Binding.h"
 #include "Handle.h"
 
 namespace Jde::DB::Odbc
 {
 	using namespace Coroutine;
-	struct ConnectAwaitable : IAwaitable
+	struct ConnectAwaitable final: IAwaitable
 	{
 		ConnectAwaitable( sv connectionString )noexcept(false): Session{}, ConnectionString{ connectionString }{}
 		α await_ready()noexcept->bool;
@@ -19,7 +20,7 @@ namespace Jde::DB::Odbc
 		HandleSessionAsync Session;
 		sv ConnectionString;
 	};
-	struct ExecuteAwaitable : IAwaitable
+	struct ExecuteAwaitable final: IAwaitable
 	{
 		ExecuteAwaitable( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings )noexcept:Statement{move(session)},_sql{move(sql)}, _pBindings{move(pBindings)}{}
 		α await_ready()noexcept->bool;
@@ -34,9 +35,10 @@ namespace Jde::DB::Odbc
 		HandleStatementAsync Statement;
 	};
 
-	struct FetchAwaitable : IAwaitable
+	struct FetchAwaitable final : IAwaitable
 	{
 		FetchAwaitable( HandleStatementAsync&& statement, ISelect* p )noexcept:Statement{ move(statement) }, _function{p}{}
+		//~FetchAwaitable(){ DBG("~FetchAwaitable"); }
 		α await_ready()noexcept->bool;
 		α await_suspend( std::coroutine_handle<> h )noexcept->void;
 		α await_resume()noexcept->TaskResult;
