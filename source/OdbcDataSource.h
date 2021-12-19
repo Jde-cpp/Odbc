@@ -5,7 +5,7 @@
 #include "OdbcAwaitables.h"
 #include "Binding.h"
 
-extern "C" JDE_ODBC_VISIBILITY Jde::DB::IDataSource* GetDataSource(); 
+extern "C" JDE_ODBC_VISIBILITY Jde::DB::IDataSource* GetDataSource();
 
 #define var const auto
 namespace Jde::DB::Odbc
@@ -21,13 +21,9 @@ namespace Jde::DB::Odbc
 		α ExecuteProc( string sql, const std::vector<object>& parameters, RowΛ f, SRCE )noexcept(false)->uint override;
 
 		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint override;
-		//α Select( string sql, RowΛ* f, const std::vector<object>* values, SRCE )noexcept(false)->uint override;
-		//ⓣ ScalerCo( sv sql, const vector<object>&& parameters={} )noexcept(false)->FunctionAwaitable;//sp<T>
-		//ⓣ ScalerNullCo( string&& sql, const vector<object>&& parameters )noexcept(false)->Task2;//sp<optional<T>>
-		
+
 		α SelectCo( ISelect* pAwait, string sql, vector<object>&& params, SRCE )noexcept->up<IAwaitable> override;
-		//α SetAsynchronous()noexcept(false)->void override;
-		α SetConnectionString( sv x )noexcept->void override;
+		α SetConnectionString( string x )noexcept->void override;
 
 		α ExecuteNoLog( string sql, const vector<object>* pParameters, RowΛ* f=nullptr, bool isStoredProc=false, SRCE )noexcept(false)->uint override;
 		α ExecuteProcNoLog( string sql, vec<object> parameters, SRCE )noexcept(false)->uint override;
@@ -36,7 +32,7 @@ namespace Jde::DB::Odbc
 
 	private:
 		α Connect()noexcept(false){ return ConnectAwaitable{_connectionString/*, Asynchronous*/}; }
-		Ω Execute( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings )noexcept{ return ExecuteAwaitable( move(session), move(sql), move(pBindings) ); }
+		Ω Execute( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings, vector<object> params, SL& sl )noexcept{ return ExecuteAwaitable( move(session), move(sql), move(pBindings), move(params), sl ); }
 		Ω Fetch( HandleStatementAsync&& h, ISelect* p )noexcept{ return FetchAwaitable( move(h), p ); }
 
 		/*SQLHDBC*/ α GetSession()noexcept(false)->sp<void>;

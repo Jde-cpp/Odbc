@@ -22,7 +22,7 @@ namespace Jde::DB::Odbc
 	};
 	struct ExecuteAwaitable final: IAwaitable
 	{
-		ExecuteAwaitable( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings )noexcept:Statement{move(session)},_sql{move(sql)}, _pBindings{move(pBindings)}{}
+		ExecuteAwaitable( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings, vector<object> params, SL& sl )noexcept:IAwaitable{sl}, Statement{move(session)},_sql{move(sql)}, _pBindings{move(pBindings)}, _params{move(params)}{}
 		α await_ready()noexcept->bool;
 		α await_suspend( std::coroutine_handle<> h )noexcept->void;
 		α await_resume()noexcept->TaskResult;
@@ -31,6 +31,7 @@ namespace Jde::DB::Odbc
 		sp<IException> ExceptionPtr;
 		string _sql;
 		up<vector<up<Binding>>> _pBindings;
+		vector<object> _params;
 		bool _log{true};
 		HandleStatementAsync Statement;
 	};

@@ -44,7 +44,7 @@ namespace Jde::DB::Odbc
 			try
 			{
 				RETCODE connectResult;
-				var completeAsyncResult = ::SQLCompleteAsync( SQL_HANDLE_DBC, Session, &connectResult ); 
+				var completeAsyncResult = ::SQLCompleteAsync( SQL_HANDLE_DBC, Session, &connectResult );
 				THROW_IF( !SQL_SUCCEEDED(completeAsyncResult), "SQLCompleteAsync returned {} - {}", completeAsyncResult, ::GetLastError() );
 				THROW_IF( !SQL_SUCCEEDED(connectResult), "SQLDriverConnect retunred {} - {}", connectResult, ::GetLastError() );
 			}
@@ -76,9 +76,23 @@ namespace Jde::DB::Odbc
 				for( var& pBinding : *_pBindings )
 				{
 					var result = ::SQLBindParameter( Statement, ++i, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, pBinding->Size(), pBinding->DecimalDigits(),  pBinding->Data(), pBinding->BufferLength(), &pBinding->Output );  THROW_IFX( result<0, DBException(result, _sql, nullptr, format("parameter {} returned {} - {}", i-1, result, ::GetLastError()), SRCE_CUR) );
+					THROW_IFX( !SUCCEEDED(result), DBException(move(_sql), nullptr, format("SQLBindParameter {}", result)) );
 				}
 			}
-			CALL( Statement.Session(), SQL_HANDLE_DBC, ::SQLExecDirect(h, (SQLCHAR*)_sql.data(), static_cast<SQLINTEGER>(_sql.size())), "SQLExecDirect" ); 
+			var retCode = ::SQLExecDirect( Statement, (SQLCHAR*)_sql.data(), (SQLINTEGER)_sql.size() );
+			if( SUCCEEDED(retCode) )
+			{
+				HandleDiagnosticRecord( "SQLExecDirect", Statement, SQL_HANDLE_STMT, retCode );
+				SQLLEN count;
+				CALL( Statement, SQL_HANDLE_STMT, ::SQLRowCount(Statement,&count), "SQLRowCount" );
+				Statement._result = count;
+			}
+			else if( retCode==SQL_INVALID_HANDLE )
+				throw DBException( retCode, move(_sql), &_params, "SQL_INVALID_HANDLE" );
+			else if( retCode==SQL_ERROR )
+				throw DBException{ retCode, move(_sql), &_params, HandleDiagnosticRecord("SQLExecDirect", Statement, SQL_HANDLE_STMT, retCode, _sl), _sl };
+			else
+				throw DBException( retCode, move(_sql), &_params, "Unknown error" );
 		}
 		catch( DBException& e )
 		{
@@ -88,16 +102,16 @@ namespace Jde::DB::Odbc
 	}
 	α ExecuteAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
 	{
-		OdbcWorker::Push( move(h), Statement.Event(), false );
+		OdbcWorker::Push( move(h), Statement.Event(), false );//never gets called.
 	}
 	α ExecuteAwaitable::await_resume()noexcept->TaskResult
 	{
-		if( Statement.IsAsynchronous() && !ExceptionPtr )
+		if( Statement.IsAsynchronous() && !ExceptionPtr )//never asynchronous
 		{
 			try
 			{
 				RETCODE statementResult;
-				var completeAsyncResult = ::SQLCompleteAsync( SQL_HANDLE_STMT, Statement, &statementResult ); 
+				var completeAsyncResult = ::SQLCompleteAsync( SQL_HANDLE_STMT, Statement, &statementResult );
 				THROW_IF( !SQL_SUCCEEDED(completeAsyncResult), "SQLCompleteAsync returned {} - {}", completeAsyncResult, ::GetLastError() );
 				THROW_IF( !SQL_SUCCEEDED(statementResult), "SQLDriverConnect retunred {} - {}", statementResult, ::GetLastError() );
 			}
@@ -108,13 +122,13 @@ namespace Jde::DB::Odbc
 		}
 		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleStatementAsync>(move(Statement)) };
 	}
-	
+
 	α FetchAwaitable::await_ready()noexcept->bool
 	{
 		return !IsAsynchronous();
 		//try
 		//{
-		//	var hr = ::SQLFetch( Statement ); 
+		//	var hr = ::SQLFetch( Statement );
 		//	THROW_IF( !SQL_SUCCEEDED(hr), "SQLFetch returned {} - {}", hr, GetLastError() );
 		//}
 		//catch( const Exception& e )
@@ -145,7 +159,7 @@ namespace Jde::DB::Odbc
 				//DBG( "sizeof={:x} data={:x}, DBType={:x}, CodeType={:x} Output={:x} Buffer={:x} size={:x}", sizeof(BindingString), (uint16)&sb, (uint16)&sb.DBType, (uint16)&sb.CodeType, (uint16)&sb.Output, (uint16)&sb._pBuffer, (uint16)&sb._size );
 				var hr2 = ::SQLBindCol( Statement, 2, (SQLSMALLINT)sb.CodeType(), sz, 10, x );//sb.BufferLength()
 				//CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 2, (SQLSMALLINT)sb.CodeType, sb.Data(), sb.BufferLength(), &sb.Output), "SQLBindCol" );
-				var hr3 = ::SQLFetch( Statement ); 
+				var hr3 = ::SQLFetch( Statement );
 				*/
 				SQLUSMALLINT i=0;
 				for( var& p : bindings )

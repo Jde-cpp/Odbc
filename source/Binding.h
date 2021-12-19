@@ -16,7 +16,7 @@ namespace Jde::DB::Odbc
 		virtual ~Binding()=default;
 		Ω GetBinding( SQLSMALLINT type )->up<Binding>;
 		Ω Create( object parameter )->up<Binding>;
-		
+
 		β Data()noexcept->void* = 0;
 		β GetDataValue()const->object=0;
 		[[noreturn]] β GetBit()const->bool{ THROW( "{} not implemented for DBType={} CodeType={}", "bit", DBType, CodeType ); }
@@ -103,7 +103,7 @@ namespace Jde::DB::Odbc
 	private:
 		int _data;
 	};
-	
+
 	struct BindingDecimal : public Binding
 	{};
 
@@ -133,7 +133,7 @@ namespace Jde::DB::Odbc
 		SQL_TIMESTAMP_STRUCT _data;
 	};
 
-	
+
 	struct BindingUInt : public Binding
 	{
 		BindingUInt( SQLSMALLINT type ):	Binding{ type, SQL_C_UBIGINT }{}
@@ -144,11 +144,11 @@ namespace Jde::DB::Odbc
 	private:
 		uint _data ;
 	};
-	
+
 	struct BindingDateTime : public Binding
 	{//{ SQL_DATETIME, SQL_C_TYPE_TIMESTAMP }
 		BindingDateTime( SQLSMALLINT type=SQL_TYPE_TIMESTAMP ):Binding{ type, SQL_C_TIMESTAMP, sizeof(SQL_TIMESTAMP_STRUCT) }{}
-		
+
 		BindingDateTime( const optional<DBTimePoint>& value );
 
 		void* Data()noexcept override{ return &_data; }
@@ -157,11 +157,11 @@ namespace Jde::DB::Odbc
 		SQLULEN Size()const noexcept override{ return 27; }//https://wezfurlong.org/blog/2005/Nov/calling-sqlbindparameter-to-bind-sql-timestamp-struct-as-sql-c-type-timestamp-avoiding-a-datetime-overflow/
 		SQLSMALLINT DecimalDigits()const noexcept{return 7;}
 		DBTimePoint GetDateTime()const override
-		{ 
+		{
 			return IsNull() ? DBTimePoint() : Jde::DateTime( _data.year, (uint8)_data.month, (uint8)_data.day, (uint8)_data.hour, (uint8)_data.minute, (uint8)_data.second, Duration(_data.fraction) ).GetTimePoint();
 		}
 		std::optional<DBTimePoint> GetDateTimeOpt()const override
-		{ 
+		{
 			std::optional<DBTimePoint> value;
 			if( !IsNull() )
 				value = GetDateTime();
@@ -175,9 +175,7 @@ namespace Jde::DB::Odbc
 	{
 		BindingDouble( SQLSMALLINT type=SQL_DOUBLE ):	Binding{ type, SQL_C_DOUBLE }{}
 		BindingDouble( double value ): Binding{ SQL_DOUBLE, SQL_C_DOUBLE },_data{value}{}
-		BindingDouble( const Decimal2& value ): Binding{ SQL_DOUBLE, SQL_C_DOUBLE },_data{ (double)value }{}
 		BindingDouble( const optional<double>& value ): Binding{ SQL_DOUBLE, SQL_C_DOUBLE },_data{value.has_value() ? value.value() : 0.0}{ if( !value.has_value() ) Output=SQL_NULL_DATA; }
-		//BindingDouble( const Decimal2& value ): Binding{ SQL_DOUBLE, SQL_C_DOUBLE },_data{ (double)value }{}
 
 		void* Data()noexcept override{ return &_data; }
 		object GetDataValue()const override{ return object{_data}; }
@@ -191,7 +189,7 @@ namespace Jde::DB::Odbc
 	{
 		α GetDataValue()const->object override{ return object{GetDouble()}; }
 		α GetDouble()const->double override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
-		{ 
+		{
 			uint divisor = (uint)std::pow( 1, _data.scale );
 			_int value = 0, last=1;
 			for( uint i=0; i<SQL_MAX_NUMERIC_LEN; ++i )
@@ -199,12 +197,12 @@ namespace Jde::DB::Odbc
 				const int current = _data.val[i];
 				const int a = current % 16;
 				const int b = current / 16;
-				value += last * a;   
+				value += last * a;
 				last *= 16;
 	         value += last * b;
 				last *= 16;
 			}
-			return (_data.sign ? 1 : -1)*(double)value/divisor; 
+			return (_data.sign ? 1 : -1)*(double)value/divisor;
 		}
 		α GetDoubleOpt()const->std::optional<double> override{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
 		α GetInt()const->_int override{ return (_int)GetDouble(); }
@@ -214,8 +212,6 @@ namespace Jde::DB::Odbc
 	{
 		BindingFloat( SQLSMALLINT type=SQL_FLOAT ):	Binding{ type, SQL_C_FLOAT }{}
 		BindingFloat( float value ): Binding{ SQL_FLOAT, SQL_C_FLOAT },_data{value}{}
-		//BindingFloat( const Decimal2& value ): Binding{ SQL_FLOAT, SQL_C_FLOAT },_data{ (double)value }{}
-		//BindingFloat( const optional<double>& value ): Binding{ SQL_FLOAT, SQL_C_FLOAT },_data{value.has_value() ? value.value() : 0.0}{ if( !value.has_value() ) Output=SQL_NULL_DATA; }
 
 		void* Data()noexcept override{ return &_data; }
 		object GetDataValue()const override{ return object{_data}; }
@@ -323,22 +319,16 @@ namespace Jde::DB::Odbc
 		case EObject::Uint:
 			pBinding = make_unique<BindingInt>( (_int)get<uint>(parameter) );
 		break;
-		//case EObject::Decimal2:
-		//	pBinding = make_unique<BindingDouble>( get<Decimal2>(parameter) );
-		//break;
 		case EObject::Double:
 			pBinding = make_unique<BindingDouble>( get<double>(parameter) );
 		break;
-		//case EObject::DoubleOptional:
-		//	pBinding = make_unique<BindingDouble>( get<optional<double>>(parameter) );
-		//break;
 		case EObject::Time:
 			pBinding = make_unique<BindingDateTime>( get<DBTimePoint>(parameter) );
 		break;
 		}
 		return pBinding;
 	}
-	inline BindingDateTime::BindingDateTime( const optional<DBTimePoint>& value ): 
+	inline BindingDateTime::BindingDateTime( const optional<DBTimePoint>& value ):
 		BindingDateTime{}
 	{
 		if( !value.has_value() )
@@ -352,8 +342,6 @@ namespace Jde::DB::Odbc
 			_data.hour = date.Hour();
 			_data.minute = date.Minute();
 			_data.second = date.Second();
-			//_data.fraction = date.Nanos();
-			//_data.fraction = (date.Nanos()+500)/1000*1000;//7 digits - [22008] [Microsoft][ODBC Driver 17 for SQL Server]Datetime field overflow. Fractional second precision exceeds the scale specified in the parameter binding. 
 			_data.fraction = 0;
 		}
 	}

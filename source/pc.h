@@ -4,7 +4,6 @@
 //	#undef NTDDI_VERSION
 //	#define NTDDI_VERSION NTDDI_WIN10_RS1 // work around linker failure MapViewOfFileNuma2@36
 	#ifndef __INTELLISENSE__ 
-		#define WIN32_LEAN_AND_MEAN
 		#include	<windows.h>
 		#include <sqltypes.h>
 		#include <sql.h>

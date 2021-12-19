@@ -62,7 +62,7 @@ namespace Jde::DB::Odbc
 					row.Reset();
 					(*f)( row );
 				}
-			} 
+			}
 			else
 			{
 				SQLLEN count;
@@ -82,9 +82,9 @@ namespace Jde::DB::Odbc
 		return resultCount;
 	}
 
-	void OdbcDataSource::SetConnectionString( sv x )noexcept
+	void OdbcDataSource::SetConnectionString( string x )noexcept
 	{
-		_connectionString = format( "{};APP={}", x, IApplication::ApplicationName() );
+		_connectionString = format( "{};APP={}", move(x), IApplication::ApplicationName() );
 		DBG( "connectionString={}"sv, _connectionString );
 	}
 /*	void OdbcDataSource::SetAsynchronous()noexcept(false)
@@ -99,7 +99,7 @@ namespace Jde::DB::Odbc
 	}
 */
 	vector<up<Binding>> AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )noexcept(false)
-	{ 
+	{
 		vector<up<Binding>> bindings; bindings.reserve( columnCount );
 		for( SQLSMALLINT iCol = 1; iCol <= columnCount; ++iCol )
 		{
@@ -117,7 +117,7 @@ namespace Jde::DB::Odbc
 			}
 			else
 				pBinding = Binding::GetBinding( (SQLSMALLINT)ssType );
-		
+
 			CALL( statement, SQL_HANDLE_STMT, ::SQLBindCol(statement, iCol, (SQLSMALLINT)pBinding->CodeType, pBinding->Data(), bufferSize, &pBinding->Output), "SQLBindCol" );
 			bindings.push_back( move(pBinding) );
 		}
@@ -143,34 +143,38 @@ namespace Jde::DB::Odbc
 	α OdbcDataSource::SelectNoLog( string sql, RowΛ f, const vector<object>* p, SL sl )noexcept(false)->uint{ return ExecDirect(CS(), move(sql), &f, p, sl, false); }
 	α OdbcDataSource::Select( string sql, RowΛ f, const vector<object>* p, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), move(sql), &f, p, sl ); }
 
-	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& parms_, SL sl )noexcept->up<IAwaitable>
-	{ 
-		return mu<FunctionAwaitable>( [pAwait,sql=move(sql_),parms=move(parms_),this]( HCoroutine h )mutable->Task2
+	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )noexcept->up<IAwaitable>
+	{
+		return mu<FunctionAwaitable>( [pAwait,sql=move(sql_),params=move(params_), sl=sl_,this]( HCoroutine h )mutable->Task2
 		{
 			try
 			{
-				auto pBindings = parms.size() ? mu<vector<up<Binding>>>() : up<vector<up<Binding>>>{};
+				auto pBindings = params.size() ? mu<vector<up<Binding>>>() : up<vector<up<Binding>>>{};
 				if( pBindings )
 				{
-					pBindings->reserve( parms.size() );
-					for( var& param : parms )
+					pBindings->reserve( params.size() );
+					for( var& param : params )
 						pBindings->push_back( Binding::Create(param) );
 				}
 				auto pSession =  (co_await Connect() ).Get<HandleSessionAsync>();
-				auto pStatement = ( co_await Execute(move(*pSession), move(sql), move(pBindings)) ).Get<HandleStatementAsync>();
+				DB::Log( sql, &params, sl );
+				auto pStatement = ( co_await Execute(move(*pSession), move(sql), move(pBindings), move(params), sl) ).Get<HandleStatementAsync>();
 				if( pAwait )
+				{
 					pStatement = ( co_await Fetch(move(*pStatement), pAwait) ).Get<HandleStatementAsync>();
-				//else
-					//CALL( *pStatement, SQL_HANDLE_STMT, ::SQLRowCount(*pStatement, (SQLLEN*)&pStatement->_result), "SQLRowCount" );
-
-				//h.promise().get_return_object().SetResult( ms<uint>(pStatement->_result) );
-				h.promise().get_return_object().SetResult( pAwait->Results() );
+					h.promise().get_return_object().SetResult( pAwait->Results() );
+				}
+				else
+				{
+					CALL( *pStatement, SQL_HANDLE_STMT, ::SQLRowCount(*pStatement, (SQLLEN*)&pStatement->_result), "SQLRowCount" );
+					h.promise().get_return_object().SetResult( ms<uint>(pStatement->_result) );
+				}
 			}
 			catch( IException& e )
 			{
 				h.promise().get_return_object().SetResult( e.Clone() );
 			}
 			h.resume();
-		}, sl); 
+		}, sl_);
 	}
 }

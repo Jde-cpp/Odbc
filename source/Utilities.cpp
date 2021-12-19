@@ -7,7 +7,7 @@
 namespace Jde::DB::Odbc
 {
 	static const LogTag& _logLevel = Logging::TagLevel( "dbDriver" );
-	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, const source_location& sl )noexcept(false)->string
+	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SL sl )noexcept(false)->string
 	{
 		THROW_IF( retCode==SQL_INVALID_HANDLE, "({}) {} - Invalid handle {:x}", functionName, hType, retCode );
 		SQLSMALLINT iRec = 0;
@@ -15,20 +15,22 @@ namespace Jde::DB::Odbc
 		SQLCHAR szMessage[SQL_MAX_MESSAGE_LENGTH];
 		SQLCHAR szState[SQL_SQLSTATE_SIZE + 1];
 		SQLSMALLINT msgLen;
-		ostringstream os;
+		string y;
 		while( SQLGetDiagRec(hType, hHandle, ++iRec, szState, &iError, szMessage, (SQLSMALLINT)(sizeof(szMessage) / sizeof(char)),  &msgLen) == SQL_SUCCESS )
 		{
 			var level{ retCode!=1 && strncmp( (char*)szState, "01004", SQL_SQLSTATE_SIZE ) ? ELogLevel::Error : ELogLevel::Debug };
 			var msg{ format("[{:<5}] {} {}", (char*)szState, (char*)szMessage, iError) };
-			os << msg << endl;
+			if( y.size() )
+				y += '\n';
+			y += msg;
 			if( strncmp((char*)szState, "01000", SQL_SQLSTATE_SIZE)==0  && iError!=3621 )//3621=The statement has been terminated.
 				Logging::LogOnce( Logging::Message{ELogLevel::Information, msg, SRCE_CUR} );
 			else
 			{
 				LOGX( msg );
-				THROW_IF( functionName=="SQLDriverConnect" && level==ELogLevel::Error,msg );
+				THROW_IF( functionName=="SQLDriverConnect" && level==ELogLevel::Error, "[{:<5}] {} {}", (char*)szState, (char*)szMessage, iError );
 			}
 		}
-		return os.str();
+		return y;
 	}
 }

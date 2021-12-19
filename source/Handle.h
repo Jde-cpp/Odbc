@@ -7,13 +7,12 @@
 namespace Jde::DB{ struct IRow; }
 namespace Jde::DB::Odbc
 {
-	struct FetchAwaitable; struct OdbcDataSource;
+	struct FetchAwaitable; struct OdbcDataSource; struct ExecuteAwaitable;
 
 	struct HandleEnvironment final: boost::noncopyable
 	{
 		HandleEnvironment();
 		HandleEnvironment( HandleEnvironment&& rhs )noexcept{};
-//		~HandleEnvironment();
 
 		operator SQLHENV()const noexcept{ return _handle.get(); }
 	private:
@@ -32,20 +31,20 @@ namespace Jde::DB::Odbc
 		HDBC _handle{nullptr};
 		HandleEnvironment _env;
 	};
-	
+
 	struct HandleSessionAsync : HandleSession
 	{
-		HandleSessionAsync( /*sv connectionString, bool asynchronous*/ )noexcept(false):HandleSession{}{}
+		HandleSessionAsync()noexcept(false):HandleSession{}{}
 		HandleSessionAsync( HandleSessionAsync&& rhs )noexcept:HandleSession{move(rhs)}, _event{ rhs._event }{ rhs._event=nullptr; };
 		~HandleSessionAsync(){ if(_event) ::CloseHandle(_event); }
 		void Connect( sv connectionString )noexcept(false) override;
-		auto IsAsynchronous()const noexcept{ return _event!=nullptr; } 
+		auto IsAsynchronous()const noexcept{ return _event!=nullptr; }
 		HANDLE Event()noexcept{ if( !_event ) _event = ::CreateEvent( nullptr, false, false, nullptr );
 			return _event; }
 		HANDLE MoveEvent()noexcept{ auto y=_event; _event=nullptr; return y; }
 	protected:
 		HANDLE _event{ nullptr };
-	};	
+	};
 	struct HandleStatement : boost::noncopyable
 	{
 		HandleStatement( string connectionString )noexcept(false);
@@ -61,7 +60,7 @@ namespace Jde::DB::Odbc
 		HandleStatementAsync( HandleSessionAsync&& session )noexcept(false):_rowStatus{ new SQLUSMALLINT[ChunkSize] }, _event{ session.IsAsynchronous() ? ::CreateEvent(nullptr, false, false, nullptr) : nullptr}, _session{ move(session) }{};
 		HandleStatementAsync( HandleStatementAsync&& rhs )noexcept:_bindings{move(rhs._bindings)}, _rowStatus{move(rhs._rowStatus)}, _result{rhs._result}, _moreRows{rhs._moreRows}, _event{move(rhs._event)}, _handle{move(rhs._handle)}, _session{move(rhs._session)}{ rhs._handle=nullptr; }
 		~HandleStatementAsync();
-		
+
 		α SetHandle( SQLHSTMT h )noexcept{ _handle=h; }
 		α Event()noexcept{ return _event; }
 		operator SQLHSTMT()const noexcept{ return _handle; }
@@ -79,6 +78,6 @@ namespace Jde::DB::Odbc
 		SQLHSTMT _handle{nullptr};
 		HandleSessionAsync _session;
 		static uint ChunkSize;
-		friend FetchAwaitable; friend OdbcDataSource;
+		friend FetchAwaitable; friend OdbcDataSource; friend ExecuteAwaitable;
 	};
 }
