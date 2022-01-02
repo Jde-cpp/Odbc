@@ -22,12 +22,12 @@ namespace Jde::DB::Odbc
 
 		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint override;
 
-		α SelectCo( ISelect* pAwait, string sql, vector<object>&& params, SRCE )noexcept->up<IAwaitable> override;
+		α SelectCo( ISelect* pAwait, string sql, vector<object>&& params, SRCE )noexcept->up<IAwait> override;
 		α SetConnectionString( string x )noexcept->void override;
 
 		α ExecuteNoLog( string sql, const vector<object>* pParameters, RowΛ* f=nullptr, bool isStoredProc=false, SRCE )noexcept(false)->uint override;
 		α ExecuteProcNoLog( string sql, vec<object> parameters, SRCE )noexcept(false)->uint override;
-		α ExecuteProcCo( string sql, vector<object> parameters, SRCE )noexcept->up<IAwaitable> override;
+		α ExecuteProcCo( string sql, vector<object> parameters, SRCE )noexcept->up<IAwait> override;
 		α SelectNoLog( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint override;
 
 	private:

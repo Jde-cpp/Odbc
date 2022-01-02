@@ -37,7 +37,7 @@ namespace Jde::DB::Odbc
 		else*/
 			CoroutinePool::Resume( move(h) );
 	}
-	α ConnectAwaitable::await_resume()noexcept->TaskResult
+	α ConnectAwaitable::await_resume()noexcept->AwaitResult
 	{
 		/*if( Asynchronous && !ExceptionPtr  )
 		{
@@ -53,7 +53,7 @@ namespace Jde::DB::Odbc
 				ExceptionPtr = std::make_exception_ptr( move(e) );
 			}
 		}*/
-		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleSessionAsync>(move(Session)) };
+		return ExceptionPtr ? AwaitResult{ ExceptionPtr } : AwaitResult{ ms<HandleSessionAsync>(move(Session)) };
 	}
 
 	α ExecuteAwaitable::await_ready()noexcept->bool
@@ -104,7 +104,7 @@ namespace Jde::DB::Odbc
 	{
 		OdbcWorker::Push( move(h), Statement.Event(), false );//never gets called.
 	}
-	α ExecuteAwaitable::await_resume()noexcept->TaskResult
+	α ExecuteAwaitable::await_resume()noexcept->AwaitResult
 	{
 		if( Statement.IsAsynchronous() && !ExceptionPtr )//never asynchronous
 		{
@@ -120,10 +120,10 @@ namespace Jde::DB::Odbc
 				ExceptionPtr = e.Clone();
 			}
 		}
-		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleStatementAsync>(move(Statement)) };
+		return ExceptionPtr ? AwaitResult{ ExceptionPtr } : AwaitResult{ ms<HandleStatementAsync>(move(Statement)) };
 	}
 
-	α FetchAwaitable::await_ready()noexcept->bool
+/*	α FetchAwaitable::await_ready()noexcept->bool
 	{
 		return !IsAsynchronous();
 		//try
@@ -140,53 +140,50 @@ namespace Jde::DB::Odbc
 	α FetchAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
 	{
 		OdbcWorker::Push( move(h), Statement.Event(), false );
-	}
-	α FetchAwaitable::await_resume()noexcept->TaskResult
+	}*/
+	α FetchAwaitable::await_resume()noexcept->AwaitResult
 	{
-		if( !ExceptionPtr )
+		try
 		{
-			try
-			{
-				var& bindings = Statement.OBindings();
+			var& bindings = Statement.OBindings();
 
 /*				BindingInt32s ib{5};
-				//SQLLEN ids[50]={0};
-				CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 1, (SQLSMALLINT)ib.CodeType(), ib.Data(), ib.BufferLength(), ib.OutputPtr()), "SQLBindCol" );
-				BindingStrings<SQL_CHAR> sb{5, 256};
-				SQLLEN l = sb.BufferLength();
-				SQLLEN x[50]={0};
-				char sz[256][256];
-				//DBG( "sizeof={:x} data={:x}, DBType={:x}, CodeType={:x} Output={:x} Buffer={:x} size={:x}", sizeof(BindingString), (uint16)&sb, (uint16)&sb.DBType, (uint16)&sb.CodeType, (uint16)&sb.Output, (uint16)&sb._pBuffer, (uint16)&sb._size );
-				var hr2 = ::SQLBindCol( Statement, 2, (SQLSMALLINT)sb.CodeType(), sz, 10, x );//sb.BufferLength()
-				//CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 2, (SQLSMALLINT)sb.CodeType, sb.Data(), sb.BufferLength(), &sb.Output), "SQLBindCol" );
-				var hr3 = ::SQLFetch( Statement );
-				*/
-				SQLUSMALLINT i=0;
-				for( var& p : bindings )
-					CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, ++i, (SQLSMALLINT)p->CodeType(), p->Data(), p->BufferLength(), p->OutputPtr()), "SQLBindCol" );
+			//SQLLEN ids[50]={0};
+			CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 1, (SQLSMALLINT)ib.CodeType(), ib.Data(), ib.BufferLength(), ib.OutputPtr()), "SQLBindCol" );
+			BindingStrings<SQL_CHAR> sb{5, 256};
+			SQLLEN l = sb.BufferLength();
+			SQLLEN x[50]={0};
+			char sz[256][256];
+			//DBG( "sizeof={:x} data={:x}, DBType={:x}, CodeType={:x} Output={:x} Buffer={:x} size={:x}", sizeof(BindingString), (uint16)&sb, (uint16)&sb.DBType, (uint16)&sb.CodeType, (uint16)&sb.Output, (uint16)&sb._pBuffer, (uint16)&sb._size );
+			var hr2 = ::SQLBindCol( Statement, 2, (SQLSMALLINT)sb.CodeType(), sz, 10, x );//sb.BufferLength()
+			//CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, 2, (SQLSMALLINT)sb.CodeType, sb.Data(), sb.BufferLength(), &sb.Output), "SQLBindCol" );
+			var hr3 = ::SQLFetch( Statement );
+			*/
+			SQLUSMALLINT i=0;
+			for( var& p : bindings )
+				CALL( Statement, SQL_HANDLE_STMT, ::SQLBindCol(Statement, ++i, (SQLSMALLINT)p->CodeType(), p->Data(), p->BufferLength(), p->OutputPtr()), "SQLBindCol" );
 
-				OdbcRowMulti row( bindings );
-				HRESULT hr;
-				while( (hr = ::SQLFetch(Statement))==SQL_SUCCESS || hr==SQL_SUCCESS_WITH_INFO )
-				{
-					uint i=0;
-					for( ; i<Statement.RowStatusesSize() && Statement.RowStatuses()[i]==SQL_ROW_SUCCESS; ++i )
-					{
-						_function->OnRow( row );
-						row.Reset();
-					}
-					if( i<Statement.RowStatusesSize() && Statement.RowStatuses()[i]==SQL_ROW_NOROW )
-						break;
-					ASSERT( i==Statement.RowStatusesSize() || Statement.RowStatuses()[i]!=SQL_ROW_ERROR );//allocate more space.
-					row.ResetRowIndex();
-				}
-				THROW_IF( hr!=SQL_NO_DATA && !SQL_SUCCEEDED(hr), "SQLFetch returned {} - {}", hr, GetLastError() );
-			}
-			catch( IException& e )
+			OdbcRowMulti row( bindings );
+			HRESULT hr;
+			while( (hr = ::SQLFetch(Statement))==SQL_SUCCESS || hr==SQL_SUCCESS_WITH_INFO )
 			{
-				ExceptionPtr = e.Clone();
+				uint i=0;
+				for( ; i<Statement.RowStatusesSize() && Statement.RowStatuses()[i]==SQL_ROW_SUCCESS; ++i )
+				{
+					_function->OnRow( row );
+					row.Reset();
+				}
+				if( i<Statement.RowStatusesSize() && Statement.RowStatuses()[i]==SQL_ROW_NOROW )
+					break;
+				ASSERT( i==Statement.RowStatusesSize() || Statement.RowStatuses()[i]!=SQL_ROW_ERROR );//allocate more space.
+				row.ResetRowIndex();
 			}
+			THROW_IF( hr!=SQL_NO_DATA && !SQL_SUCCEEDED(hr), "SQLFetch returned {} - {}", hr, GetLastError() );
 		}
-		return ExceptionPtr ? TaskResult{ ExceptionPtr } : TaskResult{ make_shared<HandleStatementAsync>(move(Statement)) };
+		catch( IException& e )
+		{
+			ExceptionPtr = e.Clone();
+		}
+		return ExceptionPtr ? AwaitResult{ ExceptionPtr } : AwaitResult{ ms<HandleStatementAsync>(move(Statement)) };
 	}
 }

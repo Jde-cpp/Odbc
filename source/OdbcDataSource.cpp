@@ -87,17 +87,7 @@ namespace Jde::DB::Odbc
 		_connectionString = format( "{};APP={}", move(x), IApplication::ApplicationName() );
 		DBG( "connectionString={}"sv, _connectionString );
 	}
-/*	void OdbcDataSource::SetAsynchronous()noexcept(false)
-	{
-		HandleSession session{ _connectionString };
-		SQLUINTEGER infoValue;
-		var returnValue = ::SQLGetInfo( session, SQL_ASYNC_NOTIFICATION, &infoValue, sizeof(infoValue), nullptr );
-		if( !SQL_SUCCEEDED(returnValue) )
-			ERR( "::SQLGetInfo(SQL_ASYNC_NOTIFICATION) returned {}  - {}"sv, returnValue, ::GetLastError() );
-		else
-			Asynchronous = SQL_ASYNC_NOTIFICATION_CAPABLE == infoValue;
-	}
-*/
+
 	vector<up<Binding>> AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )noexcept(false)
 	{
 		vector<up<Binding>> bindings; bindings.reserve( columnCount );
@@ -131,7 +121,7 @@ namespace Jde::DB::Odbc
 	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), format("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
 	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), format("{{call {} }}", sql), nullptr, &parameters, sl); }
 	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, RowΛ f, SL sl )noexcept(false)->uint{ return Select(format( "{{call {} }}", sql), f, &parameters, sl); }
-	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> p, SL sl )noexcept->up<IAwaitable>
+	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> p, SL sl )noexcept->up<IAwait>
 	{
 		return SelectCo( nullptr, move(sql), move(p), sl );
 	}
@@ -143,9 +133,9 @@ namespace Jde::DB::Odbc
 	α OdbcDataSource::SelectNoLog( string sql, RowΛ f, const vector<object>* p, SL sl )noexcept(false)->uint{ return ExecDirect(CS(), move(sql), &f, p, sl, false); }
 	α OdbcDataSource::Select( string sql, RowΛ f, const vector<object>* p, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), move(sql), &f, p, sl ); }
 
-	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )noexcept->up<IAwaitable>
+	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )noexcept->up<IAwait>
 	{
-		return mu<FunctionAwaitable>( [pAwait,sql=move(sql_),params=move(params_), sl=sl_,this]( HCoroutine h )mutable->Task2
+		return mu<FunctionAwait>( [pAwait,sql=move(sql_),params=move(params_), sl=sl_,this]( HCoroutine h )mutable->Task
 		{
 			try
 			{
@@ -156,13 +146,14 @@ namespace Jde::DB::Odbc
 					for( var& param : params )
 						pBindings->push_back( Binding::Create(param) );
 				}
-				auto pSession =  (co_await Connect() ).Get<HandleSessionAsync>();
+				auto pSession =  (co_await Connect() ).SP<HandleSessionAsync>();
 				DB::Log( sql, &params, sl );
-				auto pStatement = ( co_await Execute(move(*pSession), move(sql), move(pBindings), move(params), sl) ).Get<HandleStatementAsync>();
+				auto pStatement = ( co_await Execute(move(*pSession), move(sql), move(pBindings), move(params), sl) ).SP<HandleStatementAsync>();
 				if( pAwait )
 				{
-					pStatement = ( co_await Fetch(move(*pStatement), pAwait) ).Get<HandleStatementAsync>();
-					h.promise().get_return_object().SetResult( pAwait->Results() );
+					pStatement = ( co_await Fetch(move(*pStatement), pAwait) ).SP<HandleStatementAsync>();
+					auto p = pAwait->Results();
+					h.promise().get_return_object().SetResult( p );
 				}
 				else
 				{

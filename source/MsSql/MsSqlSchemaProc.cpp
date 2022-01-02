@@ -8,15 +8,14 @@
 namespace Jde::DB::MsSql
 {
 
-	α MsSqlSchemaProc::LoadTables( sv schema )noexcept(false)->up<flat_map<string,Table>>
+	α MsSqlSchemaProc::LoadTables( sv schema )noexcept(false)->flat_map<string,Table>
 	{
 		if( schema.empty() )
 			schema = "dbo"sv;/*_pDataSource->Catalog( MsSql::Sql::CatalogSql )*/;
-		auto pTables = mu<flat_map<string,Table>>();
-		//std::function<void(str name, str COLUMN_NAME, int ordinalPosition, str dflt, int isNullable, str type, int maxLength, int isIdentity, int isId, int NumericPrecision, int NumericScale)>
+		flat_map<string,Table> tables;
 		auto result2 = [&]( sv tableName, sv name, _int ordinalPosition, sv dflt, sv isNullable, sv type, optional<_int> maxLength, _int isIdentity, _int isId, optional<_int> numericPrecision, optional<_int> numericScale )
 		{
-			auto& table = pTables->emplace( tableName, Table{schema,tableName} ).first->second;
+			auto& table = tables.emplace( tableName, Table{schema,tableName} ).first->second;
 			table.Columns.resize( ordinalPosition );
 			var dataType = ToType(type);
 			string defaultParsed;
@@ -40,7 +39,7 @@ namespace Jde::DB::MsSql
 		};
 		var sql = Sql::ColumnSql( false );
 		_pDataSource->Select( sql, result, {schema} );
-		return pTables;
+		return tables;
 	}
 
 	vector<Index> MsSqlSchemaProc::LoadIndexes( sv schema, sv tableName )noexcept(false)
@@ -49,22 +48,17 @@ namespace Jde::DB::MsSql
 			schema = "dbo"sv;// _pDataSource->Catalog( MsSql::Sql::CatalogSql );
 
 		vector<Index> indexes;
-		//std::function<void(str indexName, str tableName, bool unique, str columnName, bool primaryKey)>
 		auto result = [&]( const IRow& row )
 		{
 			uint i=0;
 			var tableName = row.GetString(i++); var indexName = row.GetString(i++); var columnName = row.GetString(i++); var unique = row.GetBit(i++)==0;
 
-			//var ordinal = row.GetUInt(i++); var dflt = row.GetString(i++);  //var primaryKey = row.GetBit(i);
 			vector<CIString>* pColumns;
 			auto pExisting = std::find_if( indexes.begin(), indexes.end(), [&](auto index){ return index.Name==indexName && index.TableName==tableName; } );
 			if( pExisting==indexes.end() )
 			{
 				bool clustered = false;//Boolean.Parse( row["CLUSTERED"].ToString() );
 				bool primaryKey = indexName=="PRIMARY";//Boolean.Parse( row["PRIMARY_KEY"].ToString() );
-				//var pTable = tables.find( tableName );
-				//if( pTable==tables.end() )
-				//	THROW2( LogicException("Could not find table '{}' for index '{}'.", tableName, indexName) );
 				pColumns = &indexes.emplace_back( indexName, tableName, primaryKey, nullptr, unique, clustered ).Columns;
 			}
 			else
@@ -85,9 +79,6 @@ namespace Jde::DB::MsSql
 	{
 		if( schema.empty() )
 			schema = "dbo"sv;// _pDataSource->Catalog( MsSql::Sql::CatalogSql );
-		//std::vector<object> params;
-		//if( schema.size() )
-		//	params.emplace_back( schema );
 		flat_map<string,Procedure> values;
 		auto fnctn = [&values]( const IRow& row )
 		{
@@ -170,15 +161,4 @@ namespace Jde::DB::MsSql
 		_pDataSource->Select( Sql::ForeignKeySql(schema.size()), result, {schema} );
 		return fks;
 	}
-/*	Schema LoadSchema( IDataSource& ds, sv schema )noexcept(false) override;
-	{
-
-	}
-
-	Table MySqlSchemaProc::ToTable( const mysqlx::Table& mysqlTable )noexcept
-	{
-
-		//return Table( mysqlTable.);
-	}
-*/
 }

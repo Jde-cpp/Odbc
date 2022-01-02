@@ -8,7 +8,7 @@
 #define var const auto
 namespace Jde::DB::Odbc
 {
-	uint HandleStatementAsync::ChunkSize{ Settings::TryGet<uint>( "db/chunkSize" ).value_or(1024) };
+	uint HandleStatementAsync::ChunkSize{ Settings::Get<uint>( "db/chunkSize" ).value_or(1024) };
 
 	sp<void> HandleEnvironment::_handle; 
 	HandleEnvironment::HandleEnvironment()noexcept(false)

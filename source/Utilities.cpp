@@ -9,7 +9,7 @@ namespace Jde::DB::Odbc
 	static const LogTag& _logLevel = Logging::TagLevel( "dbDriver" );
 	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SL sl )noexcept(false)->string
 	{
-		THROW_IF( retCode==SQL_INVALID_HANDLE, "({}) {} - Invalid handle {:x}", functionName, hType, retCode );
+		THROW_IF( retCode==SQL_INVALID_HANDLE, "({}) {} - Invalid handle {}", functionName, hType, retCode );
 		SQLSMALLINT iRec = 0;
 		SQLINTEGER iError;
 		SQLCHAR szMessage[SQL_MAX_MESSAGE_LENGTH];
@@ -28,7 +28,8 @@ namespace Jde::DB::Odbc
 			else
 			{
 				LOGX( msg );
-				THROW_IF( functionName=="SQLDriverConnect" && level==ELogLevel::Error, "[{:<5}] {} {}", (char*)szState, (char*)szMessage, iError );
+				if( functionName=="SQLDriverConnect" && level==ELogLevel::Error )
+					throw Exception{ sl, ELogLevel::Critical, "[{:<5}] {} {}", (char*)szState, (char*)szMessage, iError };
 			}
 		}
 		return y;
