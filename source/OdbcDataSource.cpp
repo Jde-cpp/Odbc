@@ -152,13 +152,13 @@ namespace Jde::DB::Odbc
 				if( pAwait )
 				{
 					pStatement = ( co_await Fetch(move(*pStatement), pAwait) ).SP<HandleStatementAsync>();
-					auto p = pAwait->Results();
-					h.promise().get_return_object().SetResult( p );
+					//auto p = pAwait->Results();//pAwait should keep ownership. see um_apis
+					//h.promise().get_return_object().SetResult( p );
 				}
 				else
 				{
 					CALL( *pStatement, SQL_HANDLE_STMT, ::SQLRowCount(*pStatement, (SQLLEN*)&pStatement->_result), "SQLRowCount" );
-					h.promise().get_return_object().SetResult( ms<uint>(pStatement->_result) );
+					h.promise().get_return_object().SetResult( mu<uint>(pStatement->_result) );
 				}
 			}
 			catch( IException& e )
