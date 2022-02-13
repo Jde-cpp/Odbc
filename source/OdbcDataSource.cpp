@@ -46,6 +46,8 @@ namespace Jde::DB::Odbc
 		var retCode = ::SQLExecDirect( statement, (SQLCHAR*)sql.data(), static_cast<SQLINTEGER>(sql.size()) );
 		switch( retCode )
 		{
+		case SQL_NO_DATA://update with no records effected...
+			DBG( "noData={}", sql );
 		case SQL_SUCCESS_WITH_INFO:
 			HandleDiagnosticRecord( "SQLExecDirect", statement, SQL_HANDLE_STMT, retCode );
 		case SQL_SUCCESS:
@@ -115,7 +117,7 @@ namespace Jde::DB::Odbc
 	}
 
 	α OdbcDataSource::Execute( string sql, SL sl )noexcept(false)->uint{ return Select( sql, nullptr, nullptr ); }
-	α OdbcDataSource::Execute( string sql, const vector<object>& parameters, SL sl)noexcept(false)->uint{ return Execute(sql, &parameters, nullptr, false); }
+	α OdbcDataSource::Execute( string sql, const vector<object>& parameters, SL sl)noexcept(false)->uint{ return Execute(sql, &parameters, nullptr, false, sl); }
 	α OdbcDataSource::Execute( string sql, const vector<object>* pParameters, RowΛ* f, bool isStoredProc, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), sql, f, pParameters, sl );  }
 	α OdbcDataSource::ExecuteNoLog( string sql, const vector<object>* p, RowΛ* f, bool, SL sl )noexcept(false)->uint{ return ExecDirect( CS(),move(sql), f, p, sl, false );  }
 	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), format("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
