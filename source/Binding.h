@@ -110,12 +110,12 @@ namespace Jde::DB::Odbc
 	struct BindingInt : public Binding
 	{
 		BindingInt( SQLSMALLINT type=SQL_C_SBIGINT ): Binding{ type, SQL_C_SBIGINT }{}
-		BindingInt( _int value ): Binding{ SQL_INTEGER, SQL_C_SLONG },_data{value}{}
+		BindingInt( _int value ): Binding{ SQL_BIGINT, SQL_C_SBIGINT },_data{value}{}
 		void* Data()noexcept override{ return &_data; }
-		object GetDataValue()const override{ return object{_data}; };
+		object GetDataValue()const override{ return object{_data}; }
 		int64_t GetInt()const override{ return _data; }
 		uint GetUInt()const override{ return static_cast<uint>( GetInt() ); }
-		std::optional<uint> GetUIntOpt()const{ std::optional<uint> value; if(!IsNull())value=GetUInt(); return value; };
+		std::optional<uint> GetUIntOpt()const{ std::optional<uint> value; if(!IsNull())value=GetUInt(); return value; }
 		virtual DBTimePoint GetDateTime()const{ return Clock::from_time_t(_data); }
 	private:
 		_int _data ;
@@ -310,13 +310,16 @@ namespace Jde::DB::Odbc
 		case EObject::Bool:
 			pBinding = make_unique<BindingBit>( get<bool>(parameter) );
 		break;
-		case EObject::Int:
+		case EObject::Int32:
 			pBinding = make_unique<BindingInt32>( get<int>(parameter) );
 		break;
 		case EObject::Int64:
 			pBinding = make_unique<BindingInt>( get<_int>(parameter) );
 		break;
-		case EObject::Uint:
+		case EObject::UInt32:
+			pBinding = make_unique<BindingInt32>( (int)get<uint32>(parameter) );
+		break;
+		case EObject::UInt64:
 			pBinding = make_unique<BindingInt>( (_int)get<uint>(parameter) );
 		break;
 		case EObject::Double:
@@ -325,6 +328,8 @@ namespace Jde::DB::Odbc
 		case EObject::Time:
 			pBinding = make_unique<BindingDateTime>( get<DBTimePoint>(parameter) );
 		break;
+		default:
+			ASSERT( false );
 		}
 		return pBinding;
 	}

@@ -137,7 +137,7 @@ namespace Jde::DB::Odbc
 
 	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )noexcept->up<IAwait>
 	{
-		return mu<FunctionAwait>( [pAwait,sql=move(sql_),params=move(params_), sl=sl_,this]( HCoroutine h )mutable->Task
+		return mu<AsyncAwait>( [pAwait,sql=move(sql_),params=move(params_), sl=sl_,this]( HCoroutine h )mutable->Task
 		{
 			try
 			{
