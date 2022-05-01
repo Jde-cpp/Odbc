@@ -53,7 +53,7 @@ namespace Jde::DB::Odbc
 				ExceptionPtr = std::make_exception_ptr( move(e) );
 			}
 		}*/
-		return ExceptionPtr ? AwaitResult{ ExceptionPtr } : AwaitResult{ ms<HandleSessionAsync>(move(Session)) };
+		return ExceptionPtr ? AwaitResult{ ExceptionPtr->Move() } : AwaitResult{ ms<HandleSessionAsync>(move(Session)) };
 	}
 
 	α ExecuteAwaitable::await_ready()noexcept->bool

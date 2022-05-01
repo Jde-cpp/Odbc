@@ -116,7 +116,7 @@ namespace Jde::DB::Odbc
 		return bindings;
 	}
 
-	α OdbcDataSource::Execute( string sql, SL sl )noexcept(false)->uint{ return Select( sql, nullptr, nullptr ); }
+	α OdbcDataSource::Execute( string sql, SL sl )noexcept(false)->uint{ return Select( sql, nullptr, nullptr, sl ); }
 	α OdbcDataSource::Execute( string sql, const vector<object>& parameters, SL sl)noexcept(false)->uint{ return Execute(sql, &parameters, nullptr, false, sl); }
 	α OdbcDataSource::Execute( string sql, const vector<object>* pParameters, RowΛ* f, bool isStoredProc, SL sl )noexcept(false)->uint{ return ExecDirect( CS(), sql, f, pParameters, sl );  }
 	α OdbcDataSource::ExecuteNoLog( string sql, const vector<object>* p, RowΛ* f, bool, SL sl )noexcept(false)->uint{ return ExecDirect( CS(),move(sql), f, p, sl, false );  }

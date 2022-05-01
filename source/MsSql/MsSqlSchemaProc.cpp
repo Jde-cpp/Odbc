@@ -53,7 +53,7 @@ namespace Jde::DB::MsSql
 			uint i=0;
 			var tableName = row.GetString(i++); var indexName = row.GetString(i++); var columnName = row.GetString(i++); var unique = row.GetBit(i++)==0;
 
-			vector<CIString>* pColumns;
+			vector<string>* pColumns;
 			auto pExisting = std::find_if( indexes.begin(), indexes.end(), [&](auto index){ return index.Name==indexName && index.TableName==tableName; } );
 			if( pExisting==indexes.end() )
 			{
@@ -143,7 +143,7 @@ namespace Jde::DB::MsSql
 		return type;
 	}
 
-	flat_map<string,ForeignKey> MsSqlSchemaProc::LoadForeignKeys( sv schema )noexcept(false)
+	α MsSqlSchemaProc::LoadForeignKeys( sv schema )noexcept(false)->flat_map<string,ForeignKey>
 	{
 		if( schema.empty() )
 			schema = "dbo"sv; //_pDataSource->Catalog( MsSql::Sql::CatalogSql );
