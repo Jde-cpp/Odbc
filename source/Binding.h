@@ -260,31 +260,31 @@ namespace Jde::DB::Odbc
 	{
 		up<Binding> pBinding;
 		if( type==SQL_BIT )
-			pBinding = make_unique<BindingBit>();
+			pBinding = mu<BindingBit>();
 		else if( type==SQL_TINYINT )
-			pBinding = make_unique<BindingUInt8>();
+			pBinding = mu<BindingUInt8>();
 		else if( type==SQL_INTEGER )
-			pBinding = make_unique<BindingInt32>( type );
+			pBinding = mu<BindingInt32>( type );
 		else if( type==SQL_DECIMAL )
-			pBinding = make_unique<BindingDouble>( type );
+			pBinding = mu<BindingDouble>( type );
 		else if( type==SQL_SMALLINT )
-			pBinding = make_unique<BindingInt16>();
+			pBinding = mu<BindingInt16>();
 		else if( type==SQL_FLOAT )
-			pBinding = make_unique<BindingFloat>( type );
+			pBinding = mu<BindingFloat>( type );
 		else if( type==SQL_REAL )
-			pBinding = make_unique<BindingDouble>( type );
+			pBinding = mu<BindingDouble>( type );
 		else if( type==SQL_DOUBLE )
-			pBinding = make_unique<BindingDouble>( type );
+			pBinding = mu<BindingDouble>( type );
 		else if( type==SQL_DATETIME )
-			pBinding = make_unique<BindingDateTime>( type );
+			pBinding = mu<BindingDateTime>( type );
 		else if( type==SQL_BIGINT )
-			pBinding = make_unique<BindingInt>( type );
+			pBinding = mu<BindingInt>( type );
 		else if( type==SQL_TYPE_TIMESTAMP )
-			pBinding = make_unique<BindingTimeStamp>( type );
+			pBinding = mu<BindingTimeStamp>( type );
 		else if( type==SQL_BIT )
-			pBinding = make_unique<BindingBit>();
+			pBinding = mu<BindingBit>();
 		else if( type==SQL_NUMERIC )
-			pBinding = make_unique<BindingNumeric>();
+			pBinding = mu<BindingNumeric>();
 		else
 			THROW( "Binding type '{}' is not implemented.", type );
 		return pBinding;
@@ -296,37 +296,37 @@ namespace Jde::DB::Odbc
 		switch( (EObject)parameter.index() )
 		{
 		case EObject::Null:
-			pBinding = make_unique<BindingNull>();
+			pBinding = mu<BindingNull>();
 		break;
 		case EObject::String:
-			pBinding = make_unique<BindingString>( get<string>(parameter) );
+			pBinding = mu<BindingString>( get<string>(parameter) );
 		break;
 		case EObject::StringView:
-			pBinding = make_unique<BindingString>( get<sv>(parameter) );
+			pBinding = mu<BindingString>( get<sv>(parameter) );
 		break;
 		case EObject::StringPtr:
-			pBinding = make_unique<BindingString>( *get<sp<string>>(parameter) );
+			pBinding = mu<BindingString>( *get<sp<string>>(parameter) );
 		break;
 		case EObject::Bool:
-			pBinding = make_unique<BindingBit>( get<bool>(parameter) );
+			pBinding = mu<BindingBit>( get<bool>(parameter) );
 		break;
 		case EObject::Int32:
-			pBinding = make_unique<BindingInt32>( get<int>(parameter) );
+			pBinding = mu<BindingInt32>( get<int>(parameter) );
 		break;
 		case EObject::Int64:
-			pBinding = make_unique<BindingInt>( get<_int>(parameter) );
+			pBinding = mu<BindingInt>( get<_int>(parameter) );
 		break;
 		case EObject::UInt32:
-			pBinding = make_unique<BindingInt32>( (int)get<uint32>(parameter) );
+			pBinding = mu<BindingInt32>( (int)get<uint32>(parameter) );
 		break;
 		case EObject::UInt64:
-			pBinding = make_unique<BindingInt>( (_int)get<uint>(parameter) );
+			pBinding = mu<BindingInt>( (_int)get<uint>(parameter) );
 		break;
 		case EObject::Double:
-			pBinding = make_unique<BindingDouble>( get<double>(parameter) );
+			pBinding = mu<BindingDouble>( get<double>(parameter) );
 		break;
 		case EObject::Time:
-			pBinding = make_unique<BindingDateTime>( get<DBTimePoint>(parameter) );
+			pBinding = mu<BindingDateTime>( get<DBTimePoint>(parameter) );
 		break;
 		default:
 			ASSERT( false );
