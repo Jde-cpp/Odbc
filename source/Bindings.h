@@ -7,7 +7,6 @@ namespace Jde::DB::Odbc
 #pragma warning( push )
 #pragma warning (disable: 4716)
 #define $ [[noreturn]] β
-#define ρ const noexcept
 	struct IBindings
 	{
 		IBindings( uint rowCount, uint size=0 ): _output{ new SQLLEN[rowCount] }, RowCount{ rowCount }, _size{ size }{}
@@ -15,29 +14,29 @@ namespace Jde::DB::Odbc
 		Ω Create( SQLSMALLINT type, uint rowCount )->up<IBindings>;
 		Ω Create( SQLSMALLINT type, uint rowCount, uint size )noexcept(false)->up<IBindings>;
 		β Data()noexcept->void* = 0;
-		β Object( uint i )ρ->object=0;
-		β CodeType()ρ->SQLSMALLINT = 0;
-		β DBType()ρ->SQLSMALLINT = 0;
+		β Object( uint i )Ι->object=0;
+		β CodeType()Ι->SQLSMALLINT = 0;
+		β DBType()Ι->SQLSMALLINT = 0;
 
-		$ Bit( uint i )ρ->bool{ THROW( "{} not implemented for DBType={} CodeType={}", "bit", DBType(), CodeType() ); }
-		$ ToString( uint i )ρ->string{ THROW( "ToString not implemented for DBType='{}' CodeType='{}' {}", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
-		$ Int( uint i )ρ->int64_t{ THROW( "{} not implemented for DBType={} CodeType={}", "GetInt", DBType(), CodeType() ); }
-		$ Int32( uint i )ρ->int32_t{ THROW( "{} not implemented for DBType={} CodeType={}", "Int32", DBType(), CodeType() ); }
-		$ IntOpt( uint i )ρ->optional<_int>{ THROW( "{} not implemented for DBType={} CodeType={} {}", "IntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
-		$ Double( uint i )ρ->double{ THROW( "{} not implemented for DBType={} CodeType={}", "Double", DBType(), CodeType() ); }
-		β GetFloat( uint i )ρ->float{ return static_cast<float>( Double(i) ); }
-		$ DoubleOpt( uint i )ρ->optional<double>{ THROW( "{} not implemented for DBType={} CodeType={}", "DoubleOpt", DBType(), CodeType() ); }
-		$ DateTime( uint i )ρ->DBTimePoint{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTime", DBType(), CodeType() ); }
-		$ DateTimeOpt( uint i )ρ->optional<DBTimePoint>{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTimeOpt", DBType(), CodeType()); }
-		$ UInt( uint i )ρ->uint{ THROW( "{} not implemented for DBType={} CodeType={}", "UInt", DBType(), CodeType()); }
-		//β GetUInt32(uint position )ρ->uint32_t{ return static_cast<uint32_t>(UInt()); }
-		$ UIntOpt( uint i )ρ->optional<uint>{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "UIntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); };
-		α IsNull( uint i )ρ->bool{ return _output[i]==SQL_NULL_DATA; }
-		α Output( uint i )ρ->SQLLEN{ return _output[i]; }
+		$ Bit( uint i )Ι->bool{ THROW( "{} not implemented for DBType={} CodeType={}", "bit", DBType(), CodeType() ); }
+		$ ToString( uint i )Ι->string{ THROW( "ToString not implemented for DBType='{}' CodeType='{}' {}", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
+		$ Int( uint i )Ι->int64_t{ THROW( "{} not implemented for DBType={} CodeType={}", "GetInt", DBType(), CodeType() ); }
+		$ Int32( uint i )Ι->int32_t{ THROW( "{} not implemented for DBType={} CodeType={}", "Int32", DBType(), CodeType() ); }
+		$ IntOpt( uint i )Ι->optional<_int>{ THROW( "{} not implemented for DBType={} CodeType={} {}", "IntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
+		$ Double( uint i )Ι->double{ THROW( "{} not implemented for DBType={} CodeType={}", "Double", DBType(), CodeType() ); }
+		β GetFloat( uint i )Ι->float{ return static_cast<float>( Double(i) ); }
+		$ DoubleOpt( uint i )Ι->optional<double>{ THROW( "{} not implemented for DBType={} CodeType={}", "DoubleOpt", DBType(), CodeType() ); }
+		$ DateTime( uint i )Ι->DBTimePoint{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTime", DBType(), CodeType() ); }
+		$ DateTimeOpt( uint i )Ι->optional<DBTimePoint>{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTimeOpt", DBType(), CodeType()); }
+		$ UInt( uint i )Ι->uint{ THROW( "{} not implemented for DBType={} CodeType={}", "UInt", DBType(), CodeType()); }
+		//β GetUInt32(uint position )Ι->uint32_t{ return static_cast<uint32_t>(UInt()); }
+		$ UIntOpt( uint i )Ι->optional<uint>{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "UIntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); };
+		α IsNull( uint i )Ι->bool{ return _output[i]==SQL_NULL_DATA; }
+		α Output( uint i )Ι->SQLLEN{ return _output[i]; }
 		α OutputPtr()noexcept->SQLLEN*{ return _output.get(); }
-		β Size()ρ->SQLULEN{return _size;}
-		β DecimalDigits()ρ->SQLSMALLINT{return 0;}
-		β BufferLength()ρ->SQLLEN{return 0;}
+		β Size()Ι->SQLULEN{return _size;}
+		β DecimalDigits()Ι->SQLSMALLINT{return 0;}
+		β BufferLength()Ι->SQLLEN{return 0;}
 		
 	private:
 		up<SQLLEN[]> _output;
@@ -54,8 +53,8 @@ namespace Jde::DB::Odbc
 		TBindings( uint rowCount )noexcept:TBindings{ rowCount, 1 }{}
 		void* Data()noexcept override{ return _pBuffer.get(); }
 		static consteval α SqlType()->SQLSMALLINT{ return TSql; }
-		β CodeType()ρ->SQLSMALLINT override{ return TC; }
-		β DBType()ρ->SQLSMALLINT override{ return SqlType(); }
+		β CodeType()Ι->SQLSMALLINT override{ return TC; }
+		β DBType()Ι->SQLSMALLINT override{ return SqlType(); }
 	protected:
 		up<T[]> _pBuffer;
 	};
@@ -65,40 +64,40 @@ namespace Jde::DB::Odbc
 	struct BindingStrings final : base
 	{
 		BindingStrings( uint rowCount, SQLLEN size ):base{ rowCount, size }{}
-		α Object( uint i )ρ->object override{ return base::IsNull( i ) ? DB::object{} : DB::object{ ToString(i) }; }
-		α ToString( uint i )ρ->string override{ const char* p=base::_pBuffer.get(); return base::IsNull( i ) ? string{} : string{ p+base::Size()*i, p+base::Size()*i+base::Output(i) }; }
+		α Object( uint i )Ι->object override{ return base::IsNull( i ) ? DB::object{} : DB::object{ ToString(i) }; }
+		α ToString( uint i )Ι->string override{ const char* p=base::_pBuffer.get(); return base::IsNull( i ) ? string{} : string{ p+base::Size()*i, p+base::Size()*i+base::Output(i) }; }
 
-		α BufferLength()ρ->SQLLEN override{ return base::Size(); }
+		α BufferLength()Ι->SQLLEN override{ return base::Size(); }
 	};
 
 	struct BindingBits final: TBindings<bool,SQL_BIT, SQL_C_BIT>
 	{
 		BindingBits( uint rowCount ):TBindings<bool,SQL_BIT, SQL_C_BIT>{ rowCount }{}//-7
-		α Object( uint i )ρ->object override{ return object{ Bit(i) }; }
-		α Bit( uint i )ρ->bool override{ return _pBuffer[i]!=0; }
-		α Int( uint i )ρ->int64_t override{ return static_cast<int64_t>(Bit(i)); }
-		α ToString( uint i )ρ->string override{ return Bit( i ) ? "true" : "false"; }
+		α Object( uint i )Ι->object override{ return object{ Bit(i) }; }
+		α Bit( uint i )Ι->bool override{ return _pBuffer[i]!=0; }
+		α Int( uint i )Ι->int64_t override{ return static_cast<int64_t>(Bit(i)); }
+		α ToString( uint i )Ι->string override{ return Bit( i ) ? "true" : "false"; }
 	};
 
 	struct BindingInt32s final: TBindings<int,SQL_INTEGER, SQL_C_SLONG>
 	{
 		BindingInt32s( uint rowCount ): TBindings<int,SQL_INTEGER, SQL_C_SLONG>{ rowCount }{}
-		α Object( uint i )ρ->object override{ return object{Int32(i)}; }
-		α Int32( uint i )ρ->int32_t override{ return _pBuffer[i]; }
-		α Int( uint i )ρ->int64_t override{ return Int32(i); }
-		α UInt( uint i )ρ->uint override{ return static_cast<uint>(Int32(i)); }
-		α IntOpt( uint i )ρ->optional<_int>{ optional<_int> value; if( !IsNull(i) )value=Int( i ); return value; }
-		α UIntOpt( uint i )ρ->optional<uint> override{ optional<uint> optional; if( !IsNull(i) ) optional = UInt( i ); return optional; };
+		α Object( uint i )Ι->object override{ return object{Int32(i)}; }
+		α Int32( uint i )Ι->int32_t override{ return _pBuffer[i]; }
+		α Int( uint i )Ι->int64_t override{ return Int32(i); }
+		α UInt( uint i )Ι->uint override{ return static_cast<uint>(Int32(i)); }
+		α IntOpt( uint i )Ι->optional<_int>{ optional<_int> value; if( !IsNull(i) )value=Int( i ); return value; }
+		α UIntOpt( uint i )Ι->optional<uint> override{ optional<uint> optional; if( !IsNull(i) ) optional = UInt( i ); return optional; };
 	};
 	
 	struct BindingInts final: TBindings<_int,SQL_BIGINT, SQL_C_SBIGINT>
 	{
 		BindingInts( uint rowCount ): TBindings<_int,SQL_BIGINT, SQL_C_SBIGINT>{ rowCount }{}
-		α Object( uint i )ρ->object override{ return object{Int(i)}; };
-		α Int( uint i )ρ->int64_t override{ return _pBuffer[i]; }
-		α UInt( uint i )ρ->uint override{ return static_cast<uint>( Int(i) ); }
-		α UIntOpt( uint i )ρ->optional<uint>{ optional<uint> value; if(!IsNull(i))value=UInt( i ); return value; };
-		α DateTime( uint i )ρ->DBTimePoint{ return Clock::from_time_t(Int(i)); }
+		α Object( uint i )Ι->object override{ return object{Int(i)}; };
+		α Int( uint i )Ι->int64_t override{ return _pBuffer[i]; }
+		α UInt( uint i )Ι->uint override{ return static_cast<uint>( Int(i) ); }
+		α UIntOpt( uint i )Ι->optional<uint>{ optional<uint> value; if(!IsNull(i))value=UInt( i ); return value; };
+		α DateTime( uint i )Ι->DBTimePoint{ return Clock::from_time_t(Int(i)); }
 	};
 #pragma warning(push)
 #pragma warning(disable:4005)
@@ -108,17 +107,17 @@ namespace Jde::DB::Odbc
 	{
 		BindingTimes( uint rowCount ):base{ rowCount }{}
 		
-		α Object( uint i )ρ->object override{ return base::IsNull( i ) ? object{ nullptr } : object{ DateTime(i) }; }
-		α BufferLength()ρ->SQLLEN override{ return sizeof(SQL_TIMESTAMP_STRUCT); }
-		α Size()ρ->SQLULEN override{ return 27; }//https://wezfurlong.org/blog/2005/Nov/calling-sqlbindparameter-to-bind-sql-timestamp-struct-as-sql-c-type-timestamp-avoiding-a-datetime-overflow/
-		α DecimalDigits()ρ->SQLSMALLINT override{ return 7; }
-		α DateTime( uint i )ρ->DBTimePoint
+		α Object( uint i )Ι->object override{ return base::IsNull( i ) ? object{ nullptr } : object{ DateTime(i) }; }
+		α BufferLength()Ι->SQLLEN override{ return sizeof(SQL_TIMESTAMP_STRUCT); }
+		α Size()Ι->SQLULEN override{ return 27; }//https://wezfurlong.org/blog/2005/Nov/calling-sqlbindparameter-to-bind-sql-timestamp-struct-as-sql-c-type-timestamp-avoiding-a-datetime-overflow/
+		α DecimalDigits()Ι->SQLSMALLINT override{ return 7; }
+		α DateTime( uint i )Ι->DBTimePoint
 		{
 			if( base::IsNull(i) ) return DBTimePoint{};
 			SQL_TIMESTAMP_STRUCT data = base::_pBuffer[i];
 			return Jde::DateTime( data.year, (uint8)data.month, (uint8)data.day, (uint8)data.hour, (uint8)data.minute, (uint8)data.second, Duration(data.fraction) ).GetTimePoint(); 
 		}
-		α DateTimeOpt( uint i )ρ->optional<DBTimePoint> override{ return base::IsNull(i) ? nullopt : std::make_optional(DateTime(i)); }
+		α DateTimeOpt( uint i )Ι->optional<DBTimePoint> override{ return base::IsNull(i) ? nullopt : std::make_optional(DateTime(i)); }
 	};
 	////////////////////////////////////////////////////////////////////////////
 	#define base TBindings<double, TSql, SQL_C_DOUBLE>
@@ -127,9 +126,9 @@ namespace Jde::DB::Odbc
 	{
 		BindingDoubles( uint rowCount )noexcept:base{ rowCount }{}
 
-		α Object( uint i )ρ->object override{ return base::IsNull(i) ? object{} : object{ Double(i) }; }
-		α Double( uint i )ρ->double override{ return base::_pBuffer[i]; }
-		α DoubleOpt( uint i )ρ->optional<double>{ optional<double> value; if( !base::IsNull(i) ) value = Double(i); return value; }
+		α Object( uint i )Ι->object override{ return base::IsNull(i) ? object{} : object{ Double(i) }; }
+		α Double( uint i )Ι->double override{ return base::_pBuffer[i]; }
+		α DoubleOpt( uint i )Ι->optional<double>{ optional<double> value; if( !base::IsNull(i) ) value = Double(i); return value; }
 	};
 	////////////////////////////////////////////////////////////////////////////
 	#define base TBindings<SQL_NUMERIC_STRUCT,SQL_NUMERIC,SQL_C_NUMERIC>
@@ -137,8 +136,8 @@ namespace Jde::DB::Odbc
 	struct BindingNumerics : public base
 	{
 		BindingNumerics( uint rowCount )noexcept:base{ rowCount }{}
-		α Object( uint i )ρ->object override{ return object{ Double(i) }; }
-		α Double( uint i )ρ->double override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
+		α Object( uint i )Ι->object override{ return object{ Double(i) }; }
+		α Double( uint i )Ι->double override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
 		{ 
 			var data = _pBuffer[i];
 			uint divisor = (uint)std::pow( 1, data.scale );
@@ -155,8 +154,8 @@ namespace Jde::DB::Odbc
 			}
 			return (data.sign ? 1 : -1)*(double)value/divisor; 
 		}
-		α DoubleOpt( uint i )ρ->optional<double> override{ optional<double> value; if( !IsNull(i) ) value = Double(i); return value; }
-		α Int( uint i )ρ->_int override{ return (_int)Double( i ); }
+		α DoubleOpt( uint i )Ι->optional<double> override{ optional<double> value; if( !IsNull(i) ) value = Double(i); return value; }
+		α Int( uint i )Ι->_int override{ return (_int)Double( i ); }
 	};
 
 	////////////////////////////////////////////////////////////////////////////
@@ -165,9 +164,9 @@ namespace Jde::DB::Odbc
 	{
 		BindingFloats( uint rowCount ): base{ rowCount }{}
 
-		α Object( uint i )ρ->object override{ return object{ Double(i) }; }
-		α Double( uint i )ρ->double override{ return _pBuffer[i]; }
-		α DoubleOpt( uint i )ρ->optional<double>{ return IsNull(i) ? nullopt : optional<double>{ Double(i) }; }
+		α Object( uint i )Ι->object override{ return object{ Double(i) }; }
+		α Double( uint i )Ι->double override{ return _pBuffer[i]; }
+		α DoubleOpt( uint i )Ι->optional<double>{ return IsNull(i) ? nullopt : optional<double>{ Double(i) }; }
 	};
 
 	////////////////////////////////////////////////////////////////////////////
@@ -176,27 +175,28 @@ namespace Jde::DB::Odbc
 	{
 		BindingInt16s( uint rowCount ): base{ rowCount }{}
 
-		α Object( uint i )ρ->object override{ return IsNull( i ) ? object{ nullptr } : object{ Int(i) }; }
-		α UInt( uint i )ρ->uint override{ return static_cast<uint>( Int(i) ); }
-		α Int( uint i )ρ->_int override{ return static_cast<_int>( _pBuffer[i] ); }
-		α IntOpt( uint i )ρ->optional<_int> override{ return IsNull(i) ? nullopt : optional<_int>( Int(i) ); }
-		α Double( uint i )ρ->double override{ return (double)Int(i); }
-		α DoubleOpt( uint i )ρ->optional<double>{ return IsNull(i) ? nullopt : optional<double>( Double(i) ); }
+		α Object( uint i )Ι->object override{ return IsNull( i ) ? object{ nullptr } : object{ Int(i) }; }
+		α UInt( uint i )Ι->uint override{ return static_cast<uint>( Int(i) ); }
+		α Int( uint i )Ι->_int override{ return static_cast<_int>( _pBuffer[i] ); }
+		α IntOpt( uint i )Ι->optional<_int> override{ return IsNull(i) ? nullopt : optional<_int>( Int(i) ); }
+		α Double( uint i )Ι->double override{ return (double)Int(i); }
+		α DoubleOpt( uint i )Ι->optional<double>{ return IsNull(i) ? nullopt : optional<double>( Double(i) ); }
 	};
 ////////////////////////////////////////////////////////////////////////////
 	#define base TBindings<uint8_t, SQL_TINYINT, SQL_C_TINYINT>
-	struct BindingUInt8s : base
+	struct BindingInt8s : base
 	{
-		BindingUInt8s( uint rowCount ): base{ rowCount }{}
+		BindingInt8s( uint rowCount ): base{ rowCount }{}
 
-		α Object( uint i )ρ->object override{ return object{ UInt(i) }; }
+		α Object( uint i )Ι->object override{ return object{ UInt(i) }; }
 
-		α UInt( uint i )ρ->uint override{ return static_cast<uint>( _pBuffer[i] ); }
-		α UIntOpt( uint i )ρ->optional<uint> override{ optional<uint> value; if( !IsNull(i) ) value = UInt( i ); return value; }
-		α IntOpt( uint i )ρ->optional<_int> override{ optional<_int> value; if( !IsNull(i) ) value = Int( i ); return value; }
-		α Int( uint i )ρ->int64_t override{ return static_cast<int64_t>( UInt(i) ); }
-		α Double( uint i )ρ->double override{ return (double)UInt( i ); }
-		α DoubleOpt( uint i )ρ->optional<double> override{ optional<double> value; if( !IsNull(i) ) value = Double( i ); return value; }
+		α UInt( uint i )Ι->uint override{ return static_cast<uint>( _pBuffer[i] ); }
+		α UIntOpt( uint i )Ι->optional<uint> override{ optional<uint> value; if( !IsNull(i) ) value = UInt( i ); return value; }
+		α IntOpt( uint i )Ι->optional<_int> override{ optional<_int> value; if( !IsNull(i) ) value = Int( i ); return value; }
+		α Int( uint i )Ι->int64_t override{ return static_cast<int64_t>( UInt(i) ); }
+		α Int32( uint i )Ι->int32_t{ return (int32_t)Int(i); }
+		α Double( uint i )Ι->double override{ return (double)UInt( i ); }
+		α DoubleOpt( uint i )Ι->optional<double> override{ optional<double> value; if( !IsNull(i) ) value = Double( i ); return value; }
 	};
 
 	Ξ IBindings::Create( SQLSMALLINT type, uint rowCount )noexcept(false)->up<IBindings>
@@ -204,8 +204,8 @@ namespace Jde::DB::Odbc
 		up<IBindings> pBinding;
 		if( type==BindingBits::SqlType() )
 			pBinding = mu<BindingBits>( rowCount );
-		else if( type==BindingUInt8s::SqlType() )
-			pBinding = mu<BindingUInt8s>( rowCount );
+		else if( type==BindingInt8s::SqlType() )
+			pBinding = mu<BindingInt8s>( rowCount );
 		else if( type==BindingInt32s::SqlType() )
 			pBinding = mu<BindingInt32s>( rowCount );
 		//else if( type==SQL_DECIMAL )
@@ -247,6 +247,5 @@ namespace Jde::DB::Odbc
 	}
 #undef base
 #undef var
-#undef ρ
 #pragma warning(pop)
 }

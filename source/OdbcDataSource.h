@@ -13,33 +13,34 @@ namespace Jde::DB::Odbc
 	using namespace Coroutine;
 	struct OdbcDataSource : IDataSource
 	{
-		α SchemaProc()noexcept->sp<ISchemaProc> override;
-		α Execute( string sql, SRCE )noexcept(false)->uint override;
-		α Execute( string sql, vec<object>& parameters, SRCE)noexcept(false)->uint override;
-		α Execute( string sql, const std::vector<object>* pParameters, RowΛ* f, bool isStoredProc=false, SRCE )noexcept(false)->uint  override;
-		α ExecuteProc( string sql, const std::vector<object>& parameters, SRCE )noexcept(false)->uint override;
-		α ExecuteProc( string sql, const std::vector<object>& parameters, RowΛ f, SRCE )noexcept(false)->uint override;
+		α SchemaProc()ι->sp<ISchemaProc> override;
+		α Execute( string sql, SRCE )ε->uint override;
+		α Execute( string sql, vec<object>& parameters, SRCE)ε->uint override;
+		α ExecuteCo( string sql, vector<object> parameters, SRCE )ι->up<IAwait> override;
+		α Execute( string sql, const std::vector<object>* pParameters, RowΛ* f, bool isStoredProc=false, SRCE )ε->uint override;
+		α ExecuteProc( string sql, const std::vector<object>& parameters, SRCE )ε->uint override;
+		α ExecuteProc( string sql, const std::vector<object>& parameters, RowΛ f, SRCE )ε->uint override;
 
-		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint override;
+		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )ε->uint override;
 
-		α SelectCo( ISelect* pAwait, string sql, vector<object>&& params, SRCE )noexcept->up<IAwait> override;
-		α SetConnectionString( string x )noexcept->void override;
+		α SelectCo( ISelect* pAwait, string sql, vector<object>&& params, SRCE )ι->up<IAwait> override;
+		α SetConnectionString( string x )ι->void override;
 
-		α ExecuteNoLog( string sql, const vector<object>* pParameters, RowΛ* f=nullptr, bool isStoredProc=false, SRCE )noexcept(false)->uint override;
-		α ExecuteProcNoLog( string sql, vec<object> parameters, SRCE )noexcept(false)->uint override;
-		α ExecuteProcCo( string sql, vector<object> parameters, SRCE )noexcept->up<IAwait> override;
-		α SelectNoLog( string sql, RowΛ f, const vector<object>* pValues, SRCE )noexcept(false)->uint override;
+		α ExecuteNoLog( string sql, const vector<object>* pParameters, RowΛ* f=nullptr, bool isStoredProc=false, SRCE )ε->uint override;
+		α ExecuteProcNoLog( string sql, vec<object> parameters, SRCE )ε->uint override;
+		α ExecuteProcCo( string sql, vector<object> parameters, SRCE )ι->up<IAwait> override;
+		α SelectNoLog( string sql, RowΛ f, const vector<object>* pValues, SRCE )ε->uint override;
 
 	private:
-		α Connect()noexcept(false){ return ConnectAwaitable{_connectionString/*, Asynchronous*/}; }
-		Ω Execute( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings, vector<object> params, SL& sl )noexcept{ return ExecuteAwaitable( move(session), move(sql), move(pBindings), move(params), sl ); }
-		Ω Fetch( HandleStatementAsync&& h, ISelect* p )noexcept{ return FetchAwaitable( move(h), p ); }
+		α Connect()ε{ return ConnectAwaitable{_connectionString/*, Asynchronous*/}; }
+		Ω Execute( HandleSessionAsync&& session, string&& sql, up<vector<up<Binding>>> pBindings, vector<object> params, SL& sl )ι{ return ExecuteAwaitable( move(session), move(sql), move(pBindings), move(params), sl ); }
+		Ω Fetch( HandleStatementAsync&& h, ISelect* p )ι{ return FetchAwaitable( move(h), p ); }
 
-		/*SQLHDBC*/ α GetSession()noexcept(false)->sp<void>;
-		α GetEnvironment()noexcept(false)->sp<void>;
+		/*SQLHDBC*/ α GetSession()ε->sp<void>;
+		α GetEnvironment()ε->sp<void>;
 	};
 
-/*	ⓣ OdbcDataSource::ScalerCo( sv sql, const vector<object>&& parameters )noexcept(false)->FunctionAwaitable//sp<T>
+/*	ⓣ OdbcDataSource::ScalerCo( sv sql, const vector<object>&& parameters )ε->FunctionAwaitable//sp<T>
 	{
 		return FunctionAwaitable{ [sql,params=move(parameters),this]( coroutine_handle<Task2::promise_type> h )mutable->Task2
 		{

@@ -11,14 +11,7 @@ namespace Jde::DB::Odbc
 	{
 		try
 		{
-/*			if( Asynchronous )
-			{
-				CALL( Session, SQL_HANDLE_DBC, SQLSetConnectAttr(Session, SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE, (SQLPOINTER)SQL_ASYNC_DBC_ENABLE_ON, SQL_IS_INTEGER), "SQLSetConnectAttr(SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE)" );
-				CALL( Session, SQL_HANDLE_DBC, SQLSetConnectAttr(Session, SQL_ATTR_ASYNC_DBC_EVENT, Session.Event(), SQL_IS_POINTER), "SQLSetConnectAttr(SQL_ATTR_ASYNC_DBC_FUNCTIONS_ENABLE)" );
-				CALL( Session, SQL_HANDLE_DBC, SQLDriverConnect(Session, nullptr, (SQLCHAR*)string(ConnectionString).c_str(), SQL_NTS, nullptr, 0,nullptr, SQL_DRIVER_NOPROMPT), "SQLDriverConnect" );
-			}
-			else*/
-				Session.Connect( ConnectionString );
+			Session.Connect( ConnectionString );
 		}
 		catch( DBException& e )
 		{
@@ -28,31 +21,15 @@ namespace Jde::DB::Odbc
 		{
 			CRITICAL( "Unexpected Exception"sv );
 		}
-		return ExceptionPtr!=nullptr;
+		return true;//ExceptionPtr!=nullptr;
 	}
 	α ConnectAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
 	{
-/*		if( Asynchronous )
-			OdbcWorker::Push( move(h), Session.Event(), false );
-		else*/
-			CoroutinePool::Resume( move(h) );
+		ASSERT(false);
+		CoroutinePool::Resume( move(h) );
 	}
 	α ConnectAwaitable::await_resume()noexcept->AwaitResult
 	{
-		/*if( Asynchronous && !ExceptionPtr  )
-		{
-			try
-			{
-				RETCODE connectResult;
-				var completeAsyncResult = ::SQLCompleteAsync( SQL_HANDLE_DBC, Session, &connectResult );
-				THROW_IF( !SQL_SUCCEEDED(completeAsyncResult), "SQLCompleteAsync returned {} - {}", completeAsyncResult, ::GetLastError() );
-				THROW_IF( !SQL_SUCCEEDED(connectResult), "SQLDriverConnect retunred {} - {}", connectResult, ::GetLastError() );
-			}
-			catch( const Exception& e )
-			{
-				ExceptionPtr = std::make_exception_ptr( move(e) );
-			}
-		}*/
 		return ExceptionPtr ? AwaitResult{ ExceptionPtr->Move() } : AwaitResult{ ms<HandleSessionAsync>(move(Session)) };
 	}
 
@@ -65,11 +42,6 @@ namespace Jde::DB::Odbc
 			Statement.SetHandle( h );
 			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ROW_ARRAY_SIZE, (SQLPOINTER)Statement.RowStatusesSize(), 0), "SQLSetStmtAttr(SQL_ATTR_ROW_ARRAY_SIZE)" );
 			CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ROW_STATUS_PTR, (SQLPOINTER)Statement.RowStatuses(), 0), "SQLSetStmtAttr(SQL_ATTR_ROW_STATUS_PTR)" );
-			if( Statement.IsAsynchronous() )
-			{
-				CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ASYNC_ENABLE, (SQLPOINTER)SQL_ASYNC_ENABLE_ON, SQL_IS_POINTER), "SQLSetStmtAttr(SQL_ASYNC_ENABLE_ON)" );
-				CALL( Statement.Session(), SQL_HANDLE_DBC, SQLSetStmtAttr(h, SQL_ATTR_ASYNC_STMT_EVENT, Statement.Event(), SQL_IS_POINTER), "SQLSetStmtAttr(SQL_ATTR_ASYNC_STMT_EVENT)" );
-			}
 			if( _pBindings )
 			{
 				SQLUSMALLINT i = 0;
@@ -79,6 +51,7 @@ namespace Jde::DB::Odbc
 					THROW_IFX( !SUCCEEDED(result), DBException(move(_sql), nullptr, format("SQLBindParameter {}", result)) );
 				}
 			}
+			DEBUG_IF( _sql.find("call")!=string::npos );
 			var retCode = ::SQLExecDirect( Statement, (SQLCHAR*)_sql.data(), (SQLINTEGER)_sql.size() );
 			if( SUCCEEDED(retCode) )
 			{
@@ -98,28 +71,15 @@ namespace Jde::DB::Odbc
 		{
 			ExceptionPtr = e.Clone();
 		}
-		return !Statement.IsAsynchronous() || ExceptionPtr!=nullptr;
+		return true;
 	}
 	α ExecuteAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
 	{
+		ASSERT(false);
 		OdbcWorker::Push( move(h), Statement.Event(), false );//never gets called.
 	}
 	α ExecuteAwaitable::await_resume()noexcept->AwaitResult
 	{
-		if( Statement.IsAsynchronous() && !ExceptionPtr )//never asynchronous
-		{
-			try
-			{
-				RETCODE statementResult;
-				var completeAsyncResult = ::SQLCompleteAsync( SQL_HANDLE_STMT, Statement, &statementResult );
-				THROW_IF( !SQL_SUCCEEDED(completeAsyncResult), "SQLCompleteAsync returned {} - {}", completeAsyncResult, ::GetLastError() );
-				THROW_IF( !SQL_SUCCEEDED(statementResult), "SQLDriverConnect retunred {} - {}", statementResult, ::GetLastError() );
-			}
-			catch( Exception& e )
-			{
-				ExceptionPtr = e.Clone();
-			}
-		}
 		return ExceptionPtr ? AwaitResult{ ExceptionPtr } : AwaitResult{ ms<HandleStatementAsync>(move(Statement)) };
 	}
 
