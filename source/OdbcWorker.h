@@ -6,14 +6,14 @@ namespace Jde::DB::Odbc
 {
 	struct IWorker /*abstract*/
 	{
-		virtual bool Poll()noexcept=0;
-		ⓣ static ThreadCount()noexcept->uint8;
+		virtual bool Poll()ι=0;
+		Ŧ static ThreadCount()ι->uint8;
 	};
 
 	struct OdbcWorker final: IWorker
 	{
-		bool Poll()noexcept override;
-		Ω Push( std::coroutine_handle<>&& h, HANDLE hEvent, bool closeEvent=false )noexcept->void;
+		bool Poll()ι override;
+		Ω Push( std::coroutine_handle<>&& h, HANDLE hEvent, bool closeEvent=false )ι->void;
 		static uint8 _threadCount;
 		static constexpr sv Name="Odbc"sv;
 	protected:
@@ -23,13 +23,13 @@ namespace Jde::DB::Odbc
 
 	struct WorkerManager
 	{
-		ⓣ static Start( sv workerName )noexcept->sp<T>;
+		Ŧ static Start( sv workerName )ι->sp<T>;
 	private:
 		static vector<up<IWorker>> _workers;  static std::atomic_flag _objectLock;
 		static flat_set<sv> _workerNames; static std::atomic_flag _nameLock;
 	};
 
-	ⓣ static IWorker::ThreadCount()noexcept->uint8
+	Ŧ static IWorker::ThreadCount()ι->uint8
 	{
 		if( T::_threadCount==std::numeric_limits<uint8>::max() )
 		{
@@ -38,7 +38,7 @@ namespace Jde::DB::Odbc
 		return T::_threadCount;
 	}
 
-	ⓣ WorkerManager::Start( sv workerName )noexcept->sp<T>
+	Ŧ WorkerManager::Start( sv workerName )ι->sp<T>
 	{
 		sp<T> p;
 		AtomicGuard l{ _nameLock };
