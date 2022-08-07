@@ -104,7 +104,7 @@ namespace Jde::DB::MsSql
 			type = EType::Int;
 		else if( Str::StartsWith(typeName, "bigint") )
 			type=EType::Long;
-		else if( typeName=="nvarchar" )
+		else if( typeName=="nvarchar" || typeName=="sysname" )
 			type=EType::VarWChar;
 		else if(typeName=="nchar")
 			type=EType::WChar;
