@@ -35,8 +35,9 @@ namespace Jde::DB::Odbc
 				var size = pBinding->Size(); var bufferLength = pBinding->BufferLength();
 				if( pBinding->DBType==SQL_DATETIME )
 					DBG( "fractions={}"sv, dynamic_cast<const BindingDateTime*>(pBinding.get())->_data.fraction );
-				var result = SQLBindParameter( statement, ++iParameter, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, size, pBinding->DecimalDigits(),  pData, bufferLength, &pBinding->Output );
-				THROW_IFX( result<0, DBException(result, sql, pParams, format("parameter {}", (uint)iParameter-1), sl)  );
+				var decimals = pBinding->DecimalDigits();
+				var result = SQLBindParameter( statement, ++iParameter, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, size, decimals, pData, bufferLength, &pBinding->Output );
+				THROW_IFX(result < 0, DBException(result, move(sql), pParams, HandleDiagnosticRecord("SQLBindParameter", statement, SQL_HANDLE_STMT, result, sl), sl) );
 				parameters.push_back( move(pBinding) );
 			}
 		}
@@ -50,7 +51,14 @@ namespace Jde::DB::Odbc
 		case SQL_NO_DATA://update with no records effected...
 			DBG( "noData={}", sql );
 		case SQL_SUCCESS_WITH_INFO:
-			HandleDiagnosticRecord( "SQLExecDirect", statement, SQL_HANDLE_STMT, retCode );
+			try
+			{
+				HandleDiagnosticRecord( "SQLExecDirect", statement, SQL_HANDLE_STMT, retCode );
+			}
+			catch( const DBException& e )
+			{
+				throw DBException{ retCode, sql, pParams, e.what(), sl };
+			}
 		case SQL_SUCCESS:
 		{
 			SQLSMALLINT columnCount=0;

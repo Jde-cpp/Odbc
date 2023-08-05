@@ -170,8 +170,10 @@ namespace Jde::DB::Odbc
 		void* Data()noexcept override{ return &_data; }
 		object GetDataValue()const override{ return IsNull() ? object{nullptr} : object{GetDateTime()}; }
 		SQLLEN BufferLength()Ι override{ return sizeof(_data); }
-		SQLULEN Size()Ι override{ return 27; }//https://wezfurlong.org/blog/2005/Nov/calling-sqlbindparameter-to-bind-sql-timestamp-struct-as-sql-c-type-timestamp-avoiding-a-datetime-overflow/
-		SQLSMALLINT DecimalDigits()Ι{return 7;}
+		//https://learn.microsoft.com/en-us/sql/odbc/reference/appendixes/column-size?view=sql-server-ver16&redirectedfrom=MSDN
+		//https://wezfurlong.org/blog/2005/Nov/calling-sqlbindparameter-to-bind-sql-timestamp-struct-as-sql-c-type-timestamp-avoiding-a-datetime-overflow/
+		SQLULEN Size()Ι override{ return 23; }//23 works with 0
+		SQLSMALLINT DecimalDigits()Ι{ return 3; }//https://stackoverflow.com/questions/40918607/cannot-bind-a-sql-type-timestamp-value-using-odbc-with-ms-sql-server-hy104-inv
 		DBTimePoint GetDateTime()const override
 		{
 			return IsNull() ? DBTimePoint() : Jde::DateTime( _data.year, (uint8)_data.month, (uint8)_data.day, (uint8)_data.hour, (uint8)_data.minute, (uint8)_data.second, Duration(_data.fraction) ).GetTimePoint();
@@ -367,7 +369,7 @@ namespace Jde::DB::Odbc
 			_data.hour = date.Hour();
 			_data.minute = date.Minute();
 			_data.second = date.Second();
-			_data.fraction = 0;
+			_data.fraction = Chrono::MillisecondsSinceEpoch( date )%1000*1'000'000;
 		}
 	}
 }

@@ -2,8 +2,8 @@
 
 namespace Jde::DB::Odbc
 {
-	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SRCE )noexcept(false)->string;
-	Ξ Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName, SRCE )noexcept(false)
+	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SRCE )ε->string;
+	Ξ Call( SQLHANDLE handle, SQLSMALLINT handleType, std::function<int()> func, sv functionName, SRCE )ε
 	{
 		if( const int retCode = func(); retCode!=SQL_SUCCESS )
 			HandleDiagnosticRecord( functionName, handle, handleType, retCode, sl );
