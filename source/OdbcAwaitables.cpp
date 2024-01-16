@@ -51,7 +51,7 @@ namespace Jde::DB::Odbc
 					THROW_IFX( !SUCCEEDED(result), DBException(move(_sql), nullptr, format("SQLBindParameter {}", result)) );
 				}
 			}
-			DEBUG_IF( _sql.find("call")!=string::npos );
+			BREAK_IF( _sql.find("call")!=string::npos );
 			var retCode = ::SQLExecDirect( Statement, (SQLCHAR*)_sql.data(), (SQLINTEGER)_sql.size() );
 			if( SUCCEEDED(retCode) )
 			{

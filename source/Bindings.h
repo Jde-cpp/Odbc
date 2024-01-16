@@ -9,7 +9,7 @@ namespace Jde::DB::Odbc
 #define $ [[noreturn]] β
 	struct IBindings
 	{
-		IBindings( uint rowCount, uint size=0 ): _output{ new SQLLEN[rowCount] }, RowCount{ rowCount }, _size{ size }{}
+		IBindings( uint rowCount, SQLULEN size=0 ): _output{ new SQLLEN[rowCount] }, RowCount{ rowCount }, _size{ size }{}
 		virtual ~IBindings()=0;
 		Ω Create( SQLSMALLINT type, uint rowCount )->up<IBindings>;
 		Ω Create( SQLSMALLINT type, uint rowCount, uint size )noexcept(false)->up<IBindings>;
@@ -49,7 +49,7 @@ namespace Jde::DB::Odbc
 	template <class T, SQLSMALLINT TSql, SQLSMALLINT TC>
 	struct TBindings : IBindings
 	{
-		TBindings( uint rowCount, SQLLEN size ):IBindings{ rowCount, size }, _pBuffer{ new T[rowCount*size]() }{}
+		TBindings( uint rowCount, SQLULEN size ):IBindings{ rowCount, size }, _pBuffer{ new T[rowCount*size]() }{}
 		TBindings( uint rowCount )noexcept:TBindings{ rowCount, 1 }{}
 		void* Data()noexcept override{ return _pBuffer.get(); }
 		static consteval α SqlType()->SQLSMALLINT{ return TSql; }
@@ -63,7 +63,7 @@ namespace Jde::DB::Odbc
 	template<SQLSMALLINT TSql>
 	struct BindingStrings final : base
 	{
-		BindingStrings( uint rowCount, SQLLEN size ):base{ rowCount, size }{}
+		BindingStrings( uint rowCount, SQLULEN size ):base{ rowCount, size }{}
 		α Object( uint i )Ι->object override{ return base::IsNull( i ) ? DB::object{} : DB::object{ ToString(i) }; }
 		α ToString( uint i )Ι->string override{ const char* p=base::_pBuffer.get(); return base::IsNull( i ) ? string{} : string{ p+base::Size()*i, p+base::Size()*i+base::Output(i) }; }
 

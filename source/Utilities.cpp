@@ -6,7 +6,7 @@
 #define var const auto
 namespace Jde::DB::Odbc
 {
-	static const LogTag& _logLevel = Logging::TagLevel( "dbDriver" );
+	static sp<LogTag> _logLevel{ Logging::TagLevel( "dbDriver" ) };
 	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SL sl )ε->string
 	{
 		THROW_IF( retCode==SQL_INVALID_HANDLE, "({}) {} - Invalid handle {}", functionName, hType, retCode );

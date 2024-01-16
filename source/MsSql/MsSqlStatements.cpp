@@ -2,6 +2,7 @@
 
 namespace Jde::DB::MsSql::Sql
 {
+	using std::endl;
 	string ColumnSql( bool addTable )noexcept
 	{
 		std::ostringstream os;
