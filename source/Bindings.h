@@ -12,8 +12,8 @@ namespace Jde::DB::Odbc
 		IBindings( uint rowCount, SQLULEN size=0 ): _output{ new SQLLEN[rowCount] }, RowCount{ rowCount }, _size{ size }{}
 		virtual ~IBindings()=0;
 		Ω Create( SQLSMALLINT type, uint rowCount )->up<IBindings>;
-		Ω Create( SQLSMALLINT type, uint rowCount, uint size )noexcept(false)->up<IBindings>;
-		β Data()noexcept->void* = 0;
+		Ω Create( SQLSMALLINT type, uint rowCount, uint size )ε->up<IBindings>;
+		β Data()ι->void* = 0;
 		β Object( uint i )Ι->object=0;
 		β CodeType()Ι->SQLSMALLINT = 0;
 		β DBType()Ι->SQLSMALLINT = 0;
@@ -33,7 +33,7 @@ namespace Jde::DB::Odbc
 		$ UIntOpt( uint i )Ι->optional<uint>{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "UIntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); };
 		α IsNull( uint i )Ι->bool{ return _output[i]==SQL_NULL_DATA; }
 		α Output( uint i )Ι->SQLLEN{ return _output[i]; }
-		α OutputPtr()noexcept->SQLLEN*{ return _output.get(); }
+		α OutputPtr()ι->SQLLEN*{ return _output.get(); }
 		β Size()Ι->SQLULEN{return _size;}
 		β DecimalDigits()Ι->SQLSMALLINT{return 0;}
 		β BufferLength()Ι->SQLLEN{return 0;}
@@ -50,8 +50,8 @@ namespace Jde::DB::Odbc
 	struct TBindings : IBindings
 	{
 		TBindings( uint rowCount, SQLULEN size ):IBindings{ rowCount, size }, _pBuffer{ new T[rowCount*size]() }{}
-		TBindings( uint rowCount )noexcept:TBindings{ rowCount, 1 }{}
-		void* Data()noexcept override{ return _pBuffer.get(); }
+		TBindings( uint rowCount )ι:TBindings{ rowCount, 1 }{}
+		void* Data()ι override{ return _pBuffer.get(); }
 		static consteval α SqlType()->SQLSMALLINT{ return TSql; }
 		β CodeType()Ι->SQLSMALLINT override{ return TC; }
 		β DBType()Ι->SQLSMALLINT override{ return SqlType(); }
@@ -124,7 +124,7 @@ namespace Jde::DB::Odbc
 	template<SQLSMALLINT TSql>
 	struct BindingDoubles : base
 	{
-		BindingDoubles( uint rowCount )noexcept:base{ rowCount }{}
+		BindingDoubles( uint rowCount )ι:base{ rowCount }{}
 
 		α Object( uint i )Ι->object override{ return base::IsNull(i) ? object{} : object{ Double(i) }; }
 		α Double( uint i )Ι->double override{ return base::_pBuffer[i]; }
@@ -135,7 +135,7 @@ namespace Jde::DB::Odbc
 	#define var const auto
 	struct BindingNumerics : public base
 	{
-		BindingNumerics( uint rowCount )noexcept:base{ rowCount }{}
+		BindingNumerics( uint rowCount )ι:base{ rowCount }{}
 		α Object( uint i )Ι->object override{ return object{ Double(i) }; }
 		α Double( uint i )Ι->double override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
 		{ 
@@ -199,7 +199,7 @@ namespace Jde::DB::Odbc
 		α DoubleOpt( uint i )Ι->optional<double> override{ optional<double> value; if( !IsNull(i) ) value = Double( i ); return value; }
 	};
 
-	Ξ IBindings::Create( SQLSMALLINT type, uint rowCount )noexcept(false)->up<IBindings>
+	Ξ IBindings::Create( SQLSMALLINT type, uint rowCount )ε->up<IBindings>
 	{
 		up<IBindings> pBinding;
 		if( type==BindingBits::SqlType() )
@@ -230,7 +230,7 @@ namespace Jde::DB::Odbc
 			THROW( "Binding type '{}' is not implemented.", type );
 		return pBinding;
 	}
-	Ξ IBindings::Create( SQLSMALLINT type, uint rowCount, uint size )noexcept(false)->up<IBindings>
+	Ξ IBindings::Create( SQLSMALLINT type, uint rowCount, uint size )ε->up<IBindings>
 	{
 		up<IBindings> p;
 		if( type==SQL_CHAR )

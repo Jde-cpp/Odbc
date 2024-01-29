@@ -1,9 +1,9 @@
-#include "MsSqlStatements.h"
+﻿#include "MsSqlStatements.h"
 
 namespace Jde::DB::MsSql::Sql
 {
 	using std::endl;
-	string ColumnSql( bool addTable )noexcept
+	string ColumnSql( bool addTable )ι
 	{
 		std::ostringstream os;
 		os	<< "select tables.name table_name, columns.name column_name, columns.column_id, constraints.definition, columns.is_nullable, types.name, columns.max_length, is_identity, case when indexes.object_id is null then 0 else 1 end, columns.precision, columns.scale" << endl
@@ -20,7 +20,7 @@ namespace Jde::DB::MsSql::Sql
 		return os.str();
 	}
 
-	string IndexSql( bool addTable )noexcept
+	string IndexSql( bool addTable )ι
 	{
 		std::ostringstream os;
 		os << "select tables.name table_name, indexes.name index_name, columns.name column_name, case when indexes.is_unique=0 then CAST(1 AS BIT) else CAST(0 AS BIT) end non_unique, index_columns.key_ordinal" << endl
@@ -38,7 +38,7 @@ namespace Jde::DB::MsSql::Sql
 		return os.str();
 	}
 
-	string ForeignKeySql( bool addSchema )noexcept
+	string ForeignKeySql( bool addSchema )ι
 	{
 		std::ostringstream os;
 		os << "select  fk.CONSTRAINT_NAME name, fk.TABLE_NAME foreign_table, fk.COLUMN_NAME fk, pk.TABLE_NAME primary_table, pk.COLUMN_NAME pk, pk.ORDINAL_POSITION ordinal" << endl
@@ -50,7 +50,7 @@ namespace Jde::DB::MsSql::Sql
 		os << "order by name, ordinal";
 		return os.str();
 	}
-	string ProcSql( bool addSchema )noexcept
+	string ProcSql( bool addSchema )ι
 	{
 		std::ostringstream os{ "select SPECIFIC_NAME from INFORMATION_SCHEMA.ROUTINES", std::ios::ate };
 		if( addSchema )

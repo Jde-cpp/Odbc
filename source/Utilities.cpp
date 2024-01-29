@@ -6,9 +6,10 @@
 #define var const auto
 namespace Jde::DB::Odbc
 {
-	static sp<LogTag> _logLevel{ Logging::TagLevel( "dbDriver" ) };
-	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SL sl )ε->string
-	{
+	static sp<Jde::LogTag> _logTag{ Logging::Tag( "dbDriver" ) };
+	α LogTag()ι->sp<Jde::LogTag>{ return _logTag; }
+
+	α HandleDiagnosticRecord( sv functionName, SQLHANDLE hHandle, SQLSMALLINT hType, RETCODE retCode, SL sl )ε->string{
 		THROW_IF( retCode==SQL_INVALID_HANDLE, "({}) {} - Invalid handle {}", functionName, hType, retCode );
 		SQLSMALLINT iRec = 0;
 		SQLINTEGER iError;
@@ -25,10 +26,10 @@ namespace Jde::DB::Odbc
 				y += '\n';
 			y += msg;
 			if( state=="01000" && iError!=3621 )//3621=The statement has been terminated.
-				Logging::LogOnce( Logging::Message{ELogLevel::Information, msg, SRCE_CUR} );
+				LOG_ONCE( ELogLevel::Information, _logTag, "{}", msg );
 			else
 			{
-				LOGX( msg );
+				DBGX( "{}", msg );
 				if( functionName=="SQLDriverConnect" && level==ELogLevel::Error )
 					throw Exception{ sl, ELogLevel::Critical, "[{:<5}] {} {}", state, (char*)szMessage, iError };
 				if( retCode==1 && state=="23000" )//23000=Integrity constraint violation.  multiple statements why retCode==1.

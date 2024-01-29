@@ -5,24 +5,19 @@
 #include "../OdbcDataSource.h"
 #define var const auto
 
-namespace Jde::DB::MsSql
-{
-
-	α MsSqlSchemaProc::LoadTables( sv schema )noexcept(false)->flat_map<string,Table>
-	{
+namespace Jde::DB::MsSql{
+	static sp<Jde::LogTag> _logTag{ Logging::Tag( "dbDriver" ) };
+	α MsSqlSchemaProc::LoadTables( sv schema )ε->flat_map<string,Table>{
 		if( schema.empty() )
 			schema = "dbo"sv;/*_pDataSource->Catalog( MsSql::Sql::CatalogSql )*/;
 		flat_map<string,Table> tables;
-		auto result2 = [&]( sv tableName, sv name, _int ordinalPosition, sv dflt, sv isNullable, sv type, optional<_int> maxLength, _int isIdentity, _int isId, optional<_int> numericPrecision, optional<_int> numericScale )
-		{
+		auto result2 = [&]( sv tableName, sv name, _int ordinalPosition, sv dflt, sv isNullable, sv type, optional<_int> maxLength, _int isIdentity, _int isId, optional<_int> numericPrecision, optional<_int> numericScale ){
 			auto& table = tables.emplace( tableName, Table{schema,tableName} ).first->second;
 			table.Columns.resize( ordinalPosition );
 			var dataType = ToType(type);
 			string defaultParsed;
-			if( !dflt.empty() )
-			{
-				if( dataType==EType::Int )
-				{
+			if( !dflt.empty() ){
+				if( dataType==EType::Int ){
 					var start = dflt.find_first_of( '\'' );
 					var end = dflt.find_last_of( '\'' );
 					if( end-start>1 )
@@ -42,7 +37,7 @@ namespace Jde::DB::MsSql
 		return tables;
 	}
 
-	vector<Index> MsSqlSchemaProc::LoadIndexes( sv schema, sv tableName )noexcept(false)
+	vector<Index> MsSqlSchemaProc::LoadIndexes( sv schema, sv tableName )ε
 	{
 		if( schema.empty() )
 			schema = "dbo"sv;// _pDataSource->Catalog( MsSql::Sql::CatalogSql );
@@ -75,7 +70,7 @@ namespace Jde::DB::MsSql
 		return indexes;
 	}
 
-	flat_map<string,Procedure> MsSqlSchemaProc::LoadProcs( sv schema )noexcept(false)
+	flat_map<string,Procedure> MsSqlSchemaProc::LoadProcs( sv schema )ε
 	{
 		if( schema.empty() )
 			schema = "dbo"sv;// _pDataSource->Catalog( MsSql::Sql::CatalogSql );
@@ -89,7 +84,7 @@ namespace Jde::DB::MsSql
 		return values;
 	}
 
-	EType MsSqlSchemaProc::ToType( sv typeName )noexcept
+	EType MsSqlSchemaProc::ToType( sv typeName )ι
 	{
 		EType type{ EType::None };
 		if(typeName=="datetime")
@@ -143,7 +138,7 @@ namespace Jde::DB::MsSql
 		return type;
 	}
 
-	α MsSqlSchemaProc::LoadForeignKeys( sv schema )noexcept(false)->flat_map<string,ForeignKey>
+	α MsSqlSchemaProc::LoadForeignKeys( sv schema )ε->flat_map<string,ForeignKey>
 	{
 		if( schema.empty() )
 			schema = "dbo"sv; //_pDataSource->Catalog( MsSql::Sql::CatalogSql );

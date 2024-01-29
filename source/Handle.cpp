@@ -9,9 +9,10 @@
 namespace Jde::DB::Odbc
 {
 	uint HandleStatementAsync::ChunkSize{ Settings::Get<uint>( "db/chunkSize" ).value_or(1024) };
+	static sp<Jde::LogTag> _logTag{ Logging::Tag( "dbDriver" ) };
 
 	sp<void> HandleEnvironment::_handle; 
-	HandleEnvironment::HandleEnvironment()noexcept(false)
+	HandleEnvironment::HandleEnvironment()ε
 	{
 		if( !_handle )
 		{
@@ -23,27 +24,27 @@ namespace Jde::DB::Odbc
 		}
 	}
 
-	HandleSession::HandleSession()noexcept(false)
+	HandleSession::HandleSession()ε
 	{
 		CALL( _env, SQL_HANDLE_ENV, SQLAllocHandle(SQL_HANDLE_DBC, _env, &_handle), "SQLAllocHandle" );
 	}
-	HandleSession::HandleSession( sv connectionString )noexcept(false):
+	HandleSession::HandleSession( sv connectionString )ε:
 		HandleSession{}
 	{
 		Connect( connectionString );
 	}
-	auto HandleSession::Connect( sv connectionString )noexcept(false)->void
+	auto HandleSession::Connect( sv connectionString )ε->void
 	{
 		SQLCHAR connectionStringResult[8192]; 
 		SQLSMALLINT connectionStringLength;
 		CALL( _handle, SQL_HANDLE_DBC, SQLDriverConnect(_handle, nullptr, (SQLCHAR*)string(connectionString).c_str(), SQL_NTS, connectionStringResult, 8192, &connectionStringLength, SQL_DRIVER_NOPROMPT), "SQLDriverConnect" );
 		if( connectionStringLength>0 )
-			INFO_ONCE( "connectionString={}", (char*)connectionStringResult );
+			LOG_ONCE( ELogLevel::Information, _logTag, "connectionString={}", (char*)connectionStringResult );
 		else
 			CRITICAL( "connectionString Length={}"sv, connectionStringLength );
 	}
 	
-	auto HandleSessionAsync::Connect( sv connectionString )noexcept(false)->void
+	auto HandleSessionAsync::Connect( sv connectionString )ε->void
 	{
 		if( IsAsynchronous() )
 		{
@@ -64,17 +65,15 @@ namespace Jde::DB::Odbc
 		}
 	}
 
-	HandleStatement::HandleStatement( string cs )noexcept(false):
+	HandleStatement::HandleStatement( string cs )ε:
 		_session{ move(cs) }
 	{
 		CALL( _session, SQL_HANDLE_DBC, SQLAllocHandle(SQL_HANDLE_STMT, _session, &_handle), "SQLAllocHandle" );
 	}
-	HandleStatement::~HandleStatement()
-	{
-		if( _handle )
-		{
+	HandleStatement::~HandleStatement(){
+		if( _handle )	{
 			if( var rc=SQLFreeHandle( SQL_HANDLE_STMT, _handle )!=SQL_SUCCESS )
-				DBG( "SQLFreeHandle( SQL_HANDLE_STMT, {} ) returned {}"sv, _handle, rc );
+				WARNT( AppTag(), "SQLFreeHandle( SQL_HANDLE_STMT, {} ) returned {}"sv, _handle, rc );
 		}
 	}
 	HandleStatementAsync::~HandleStatementAsync()
@@ -83,7 +82,7 @@ namespace Jde::DB::Odbc
 		var rc = _handle ? ::SQLFreeHandle( SQL_HANDLE_STMT, _handle ) : SQL_SUCCESS;
 		WARN_IF( rc!=SQL_SUCCESS, "SQLFreeHandle(SQL_HANDLE_STMT) returned {} - {}", rc, ::GetLastError() );
 	}
-	α HandleStatementAsync::OBindings()noexcept(false)->const vector<up<IBindings>>&
+	α HandleStatementAsync::OBindings()ε->const vector<up<IBindings>>&
 	{
 		if( !_bindings.size() )
 		{

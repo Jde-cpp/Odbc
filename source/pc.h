@@ -26,3 +26,4 @@
 #endif
 
 #include "../../Framework/source/DateTime.h"
+#include <jde/Log.h>

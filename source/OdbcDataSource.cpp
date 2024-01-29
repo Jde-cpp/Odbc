@@ -8,18 +8,17 @@
 #include "Utilities.h"
 
 #define var const auto
+#define _logTag LogTag()
 
-Jde::DB::IDataSource* GetDataSource()
-{
+Jde::DB::IDataSource* GetDataSource(){
 	return new Jde::DB::Odbc::OdbcDataSource();
 }
 
-namespace Jde::DB::Odbc
-{
+namespace Jde::DB::Odbc{
+
 	α AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )ε->vector<up<Binding>>;
 
-	α ExecDirect( string cs, string sql, RowΛ* f, const vector<object>* pParams, SL sl, bool log=true )ε->uint
-	{
+	α ExecDirect( string cs, string sql, RowΛ* f, const vector<object>* pParams, SL sl, bool log=true )ε->uint{
 		HandleStatement statement{ move(cs) };
 		vector<SQLUSMALLINT> paramStatusArray;
 		vector<up<Binding>> parameters;
@@ -34,7 +33,7 @@ namespace Jde::DB::Odbc
 				pData = pBinding->Data();
 				var size = pBinding->Size(); var bufferLength = pBinding->BufferLength();
 				if( pBinding->DBType==SQL_DATETIME )
-					DBG( "fractions={}"sv, dynamic_cast<const BindingDateTime*>(pBinding.get())->_data.fraction );
+					TRACE( "fractions={}", dynamic_cast<const BindingDateTime*>(pBinding.get())->_data.fraction );
 				var decimals = pBinding->DecimalDigits();
 				var result = SQLBindParameter( statement, ++iParameter, SQL_PARAM_INPUT, pBinding->CodeType, pBinding->DBType, size, decimals, pData, bufferLength, &pBinding->Output );
 				THROW_IFX(result < 0, DBException(result, move(sql), pParams, HandleDiagnosticRecord("SQLBindParameter", statement, SQL_HANDLE_STMT, result, sl), sl) );
@@ -42,7 +41,7 @@ namespace Jde::DB::Odbc
 			}
 		}
 		uint resultCount = 0;
-		if( log )
+		if( log && DB::SqlTag()->Level==ELogLevel::Trace )
 			DB::Log( sql, pParams, sl );
 		//DEBUG_IF( sql.find("call")!=string::npos );
 		var retCode = ::SQLExecDirect( statement, (SQLCHAR*)sql.data(), static_cast<SQLINTEGER>(sql.size()) );
@@ -93,24 +92,20 @@ namespace Jde::DB::Odbc
 		return resultCount;
 	}
 
-	void OdbcDataSource::SetConnectionString( string x )ι
-	{
+	void OdbcDataSource::SetConnectionString( string x )ι{
 		_connectionString = format( "{};APP={}", move(x), IApplication::ApplicationName() );
 		DBG( "connectionString={}"sv, _connectionString );
 	}
 
-	vector<up<Binding>> AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )ε
-	{
+	vector<up<Binding>> AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )ε{
 		vector<up<Binding>> bindings; bindings.reserve( columnCount );
-		for( SQLSMALLINT iCol = 1; iCol <= columnCount; ++iCol )
-		{
+		for( SQLSMALLINT iCol = 1; iCol <= columnCount; ++iCol ){
 			SQLLEN ssType;
 			CALL( statement, SQL_HANDLE_STMT, ::SQLColAttribute(statement, iCol, SQL_DESC_CONCISE_TYPE, NULL, 0, NULL, &ssType), "SQLColAttribute::Concise" );
 
 			SQLLEN bufferSize = 0;
 			up<Binding> pBinding;
-			if( ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR || ssType == -9/*varchar(max)?*/ || ssType == -10/*nvarchar(max)?*/ )
-			{
+			if( ssType == SQL_CHAR || ssType == SQL_VARCHAR || ssType == SQL_LONGVARCHAR || ssType == -9/*varchar(max)?*/ || ssType == -10/*nvarchar(max)?*/ ){
 				CALL( statement, SQL_HANDLE_STMT, ::SQLColAttribute(statement, iCol, SQL_DESC_DISPLAY_SIZE, NULL, 0, NULL, &bufferSize), "SQLColAttribute::Display" );
 				if( (ssType==-9 || ssType==-10) && bufferSize==0 )
 					bufferSize = (1 << 14) - 1;//TODO handle varchar(max).
@@ -128,30 +123,25 @@ namespace Jde::DB::Odbc
 	α OdbcDataSource::Execute( string sql, SL sl )ε->uint{ return Select( sql, nullptr, nullptr, sl ); }
 	α OdbcDataSource::Execute( string sql, const vector<object>& parameters, SL sl)ε->uint{ return Execute(sql, &parameters, nullptr, false, sl); }
 	α OdbcDataSource::Execute( string sql, const vector<object>* pParameters, RowΛ* f, bool isStoredProc, SL sl )ε->uint{ return ExecDirect( CS(), sql, f, pParameters, sl );  }
-	α OdbcDataSource::ExecuteCo( string sql, vector<object> p, SL sl )ι->up<IAwait>
-	{
+	α OdbcDataSource::ExecuteCo( string sql, vector<object> p, SL sl )ι->up<IAwait>{
 		return SelectCo( nullptr, move(sql), move(p), sl );
 	}
 	α OdbcDataSource::ExecuteNoLog( string sql, const vector<object>* p, RowΛ* f, bool, SL sl )ε->uint{ return ExecDirect( CS(),move(sql), f, p, sl, false );  }
 	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )ε->uint{ return ExecDirect( CS(), format("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
 	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, SL sl )ε->uint{ return ExecDirect( CS(), format("{{call {} }}", sql), nullptr, &parameters, sl); }
 	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, RowΛ f, SL sl )ε->uint{ return Select(format("{{call {} }}", move(sql)), f, &parameters, sl); }
-	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> p, SL sl )ι->up<IAwait>
-	{
+	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> p, SL sl )ι->up<IAwait>{
 		return ExecuteCo( format("{{call {} }}", move(sql)), move(p), sl );
 	}
 
-	sp<ISchemaProc> OdbcDataSource::SchemaProc()ι
-	{
+	sp<ISchemaProc> OdbcDataSource::SchemaProc()ι{
 		return ms<MsSql::MsSqlSchemaProc>( shared_from_this() );
 	}
 	α OdbcDataSource::SelectNoLog( string sql, RowΛ f, const vector<object>* p, SL sl )ε->uint{ return ExecDirect(CS(), move(sql), &f, p, sl, false); }
 	α OdbcDataSource::Select( string sql, RowΛ f, const vector<object>* p, SL sl )ε->uint{ return ExecDirect( CS(), move(sql), &f, p, sl ); }
 
-	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )ι->up<IAwait>
-	{
-		return mu<TPoolAwait<uint>>( [cs=CS(),pAwait,sql=move(sql_),params=move(params_), sl=sl_]()->up<uint>
-		{
+	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )ι->up<IAwait>{
+		return mu<TPoolAwait<uint>>( [cs=CS(),pAwait,sql=move(sql_),params=move(params_), sl=sl_]()->up<uint>{
 			uint y;
 			if( pAwait )
 			{

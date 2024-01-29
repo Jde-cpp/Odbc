@@ -5,9 +5,8 @@
 #include "OdbcRow.h"
 
 #define var const auto
-namespace Jde::DB::Odbc
-{
-	α ConnectAwaitable::await_ready()noexcept->bool
+namespace Jde::DB::Odbc{
+	α ConnectAwaitable::await_ready()ι->bool
 	{
 		try
 		{
@@ -19,21 +18,22 @@ namespace Jde::DB::Odbc
 		}
 		catch( ... )
 		{
-			CRITICAL( "Unexpected Exception"sv );
+			var _logTag = LogTag();
+			CRITICAL( "Unexpected Exception" );
 		}
 		return true;//ExceptionPtr!=nullptr;
 	}
-	α ConnectAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
+	α ConnectAwaitable::await_suspend( std::coroutine_handle<> h )ι->void
 	{
 		ASSERT(false);
 		CoroutinePool::Resume( move(h) );
 	}
-	α ConnectAwaitable::await_resume()noexcept->AwaitResult
+	α ConnectAwaitable::await_resume()ι->AwaitResult
 	{
 		return ExceptionPtr ? AwaitResult{ ExceptionPtr->Move() } : AwaitResult{ ms<HandleSessionAsync>(move(Session)) };
 	}
 
-	α ExecuteAwaitable::await_ready()noexcept->bool
+	α ExecuteAwaitable::await_ready()ι->bool
 	{
 		try
 		{
@@ -73,17 +73,17 @@ namespace Jde::DB::Odbc
 		}
 		return true;
 	}
-	α ExecuteAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
+	α ExecuteAwaitable::await_suspend( std::coroutine_handle<> h )ι->void
 	{
 		ASSERT(false);
 		OdbcWorker::Push( move(h), Statement.Event(), false );//never gets called.
 	}
-	α ExecuteAwaitable::await_resume()noexcept->AwaitResult
+	α ExecuteAwaitable::await_resume()ι->AwaitResult
 	{
 		return ExceptionPtr ? AwaitResult{ ExceptionPtr } : AwaitResult{ ms<HandleStatementAsync>(move(Statement)) };
 	}
 
-/*	α FetchAwaitable::await_ready()noexcept->bool
+/*	α FetchAwaitable::await_ready()ι->bool
 	{
 		return !IsAsynchronous();
 		//try
@@ -97,11 +97,11 @@ namespace Jde::DB::Odbc
 		//}
 		//return !IsAsynchronous() || ExceptionPtr!=nullptr;
 	}
-	α FetchAwaitable::await_suspend( std::coroutine_handle<> h )noexcept->void
+	α FetchAwaitable::await_suspend( std::coroutine_handle<> h )ι->void
 	{
 		OdbcWorker::Push( move(h), Statement.Event(), false );
 	}*/
-	α FetchAwaitable::await_resume()noexcept->AwaitResult
+	α FetchAwaitable::await_resume()ι->AwaitResult
 	{
 		try
 		{

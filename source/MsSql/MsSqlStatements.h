@@ -1,10 +1,10 @@
-#pragma once
+﻿#pragma once
 
 namespace Jde::DB::MsSql::Sql
 {
-	string ColumnSql( bool addTable=false )noexcept;
-	string IndexSql( bool addTable=false )noexcept;
-	string ForeignKeySql( bool addSchema=false )noexcept;
-	string ProcSql( bool addSchema=false )noexcept;
+	string ColumnSql( bool addTable=false )ι;
+	string IndexSql( bool addTable=false )ι;
+	string ForeignKeySql( bool addSchema=false )ι;
+	string ProcSql( bool addSchema=false )ι;
 	constexpr sv CatalogSql = "select DB_NAME()"sv;
 }
