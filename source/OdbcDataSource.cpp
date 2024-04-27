@@ -93,7 +93,7 @@ namespace Jde::DB::Odbc{
 	}
 
 	void OdbcDataSource::SetConnectionString( string x )ι{
-		_connectionString = format( "{};APP={}", move(x), IApplication::ApplicationName() );
+		_connectionString = Jde::format( "{};APP={}", move(x), IApplication::ApplicationName() );
 		DBG( "connectionString={}"sv, _connectionString );
 	}
 
@@ -127,11 +127,11 @@ namespace Jde::DB::Odbc{
 		return SelectCo( nullptr, move(sql), move(p), sl );
 	}
 	α OdbcDataSource::ExecuteNoLog( string sql, const vector<object>* p, RowΛ* f, bool, SL sl )ε->uint{ return ExecDirect( CS(),move(sql), f, p, sl, false );  }
-	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )ε->uint{ return ExecDirect( CS(), format("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
-	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, SL sl )ε->uint{ return ExecDirect( CS(), format("{{call {} }}", sql), nullptr, &parameters, sl); }
-	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, RowΛ f, SL sl )ε->uint{ return Select(format("{{call {} }}", move(sql)), f, &parameters, sl); }
+	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )ε->uint{ return ExecDirect( CS(), Jde::format("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
+	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, SL sl )ε->uint{ return ExecDirect( CS(), Jde::format("{{call {} }}", sql), nullptr, &parameters, sl); }
+	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, RowΛ f, SL sl )ε->uint{ return Select(Jde::format("{{call {} }}", move(sql)), f, &parameters, sl); }
 	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> p, SL sl )ι->up<IAwait>{
-		return ExecuteCo( format("{{call {} }}", move(sql)), move(p), sl );
+		return ExecuteCo(Jde::format("{{call {} }}", move(sql)), move(p), sl );
 	}
 
 	sp<ISchemaProc> OdbcDataSource::SchemaProc()ι{

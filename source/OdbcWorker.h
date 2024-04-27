@@ -33,7 +33,7 @@ namespace Jde::DB::Odbc
 	{
 		if( T::_threadCount==std::numeric_limits<uint8>::max() )
 		{
-			T::_threadCount = Settings::Get<uint8>( format("workders/{}/threads", T::Name) ).value_or( 0 );
+			T::_threadCount = Settings::Get<uint8>( Jde::format("workders/{}/threads", T::Name) ).value_or( 0 );
 		}
 		return T::_threadCount;
 	}

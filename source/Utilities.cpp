@@ -17,19 +17,17 @@ namespace Jde::DB::Odbc
 		SQLCHAR szState[SQL_SQLSTATE_SIZE + 1];
 		SQLSMALLINT msgLen;
 		string y;
-		while( SQLGetDiagRec(hType, hHandle, ++iRec, szState, &iError, szMessage, (SQLSMALLINT)(sizeof(szMessage) / sizeof(char)),  &msgLen) == SQL_SUCCESS )
-		{
+		while( SQLGetDiagRec(hType, hHandle, ++iRec, szState, &iError, szMessage, (SQLSMALLINT)(sizeof(szMessage) / sizeof(char)),  &msgLen) == SQL_SUCCESS ){
 			const string state{ (const char*)szState, SQL_SQLSTATE_SIZE };
 			var level{ (retCode!=1 && state=="01004") ? ELogLevel::Error : ELogLevel::Debug };
-			var msg{ format("[{:<5}] {} {}", state, (char*)szMessage, iError) };
+			var msg{ Jde::format("[{:<5}] {} {}", state, (char*)szMessage, iError) };
 			if( y.size() )
 				y += '\n';
 			y += msg;
 			if( state=="01000" && iError!=3621 )//3621=The statement has been terminated.
 				LOG_ONCE( ELogLevel::Information, _logTag, "{}", msg );
-			else
-			{
-				DBGX( "{}", msg );
+			else{
+				DBGX( "({}){}", functionName, msg );
 				if( functionName=="SQLDriverConnect" && level==ELogLevel::Error )
 					throw Exception{ sl, ELogLevel::Critical, "[{:<5}] {} {}", state, (char*)szMessage, iError };
 				if( retCode==1 && state=="23000" )//23000=Integrity constraint violation.  multiple statements why retCode==1.
