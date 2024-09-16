@@ -29,7 +29,7 @@ namespace Jde::DB::Odbc{
 		$ GetDateTime()Ε->DBTimePoint{ THROW( "{} not implemented for DBType={} CodeType={}", "GetDateTime", DBType, CodeType ); }
 		$ GetDateTimeOpt()Ε->std::optional<DBTimePoint>{ THROW( "{} not implemented for DBType={} CodeType={}", "GetDateTimeOpt", DBType, CodeType); }
 		$ GetUInt()Ε->uint{ THROW( "{} not implemented for DBType={} CodeType={}", "GetUInt", DBType, CodeType); }
-		β GetUInt32(uint position )Ε->uint32_t{ return static_cast<uint32_t>(GetUInt()); }
+		β GetUInt32(uint)Ε->uint32_t{ return static_cast<uint32_t>(GetUInt()); }
 		$ GetUIntOpt()Ε->std::optional<uint>{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "GetUIntOpt", DBType, CodeType, "GetTypeName<decltype(this)>()" ); };
 		α IsNull()Ι->bool{ return Output==SQL_NULL_DATA; }
 		β Size()Ι->SQLULEN{return 0;}
@@ -206,6 +206,7 @@ namespace Jde::DB::Odbc{
 		}
 		α GetDoubleOpt()Ι->std::optional<double> override{ std::optional<double> value; if( !IsNull() ) value = GetDouble(); return value; }
 		α GetInt()Ι->_int override{ return (_int)GetDouble(); }
+		α GetUInt()Ι->uint override{ return (uint)GetDouble(); }
 	};
 
 	struct BindingFloat final : Binding{
@@ -337,7 +338,7 @@ namespace Jde::DB::Odbc{
 			Output = SQL_NULL_DATA;
 		else{
 			Jde::DateTime date( value.value() );
-			_data.year = date.Year();
+			_data.year = (SQLSMALLINT)date.Year();
 			_data.month = date.Month();
 			_data.day = date.Day();
 			_data.hour = date.Hour();

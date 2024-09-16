@@ -5,30 +5,31 @@
 #include "OdbcAwaitables.h"
 #include "Binding.h"
 
-extern "C" JDE_ODBC_VISIBILITY Jde::DB::IDataSource* GetDataSource();
+extern "C" ΓODBC Jde::DB::IDataSource* GetDataSource();
 
 #define var const auto
 namespace Jde::DB::Odbc
 {
 	using namespace Coroutine;
-	struct OdbcDataSource : IDataSource
-	{
+	struct OdbcDataSource : IDataSource{
 		α SchemaProc()ι->sp<ISchemaProc> override;
 		α Execute( string sql, SRCE )ε->uint override;
-		α Execute( string sql, vec<object>& parameters, SRCE)ε->uint override;
-		α ExecuteCo( string sql, vector<object> parameters, SRCE )ι->up<IAwait> override;
-		α Execute( string sql, const std::vector<object>* pParameters, RowΛ* f, bool isStoredProc=false, SRCE )ε->uint override;
-		α ExecuteProc( string sql, const std::vector<object>& parameters, SRCE )ε->uint override;
-		α ExecuteProc( string sql, const std::vector<object>& parameters, RowΛ f, SRCE )ε->uint override;
+		α Execute( string sql, vec<object>& params, SRCE)ε->uint override;
+		α ExecuteCo( string sql, vector<object> params, SRCE )ι->up<IAwait> override;
+		α ExecuteCo( string sql, vector<object> p, bool proc, RowΛ f, SRCE )ε->up<IAwait>;
+		α Execute( string sql, const vector<object>* params, const RowΛ* f, bool isStoredProc=false, SRCE )ε->uint override;
+		α ExecuteProc( string sql, const vector<object>& params, SRCE )ε->uint override;
+		α ExecuteProc( string sql, const vector<object>& params, RowΛ f, SRCE )ε->uint override;
 
 		α Select( string sql, RowΛ f, const vector<object>* pValues, SRCE )ε->uint override;
 
 		α SelectCo( ISelect* pAwait, string sql, vector<object>&& params, SRCE )ι->up<IAwait> override;
 		α SetConnectionString( string x )ι->void override;
 
-		α ExecuteNoLog( string sql, const vector<object>* pParameters, RowΛ* f=nullptr, bool isStoredProc=false, SRCE )ε->uint override;
-		α ExecuteProcNoLog( string sql, vec<object> parameters, SRCE )ε->uint override;
-		α ExecuteProcCo( string sql, vector<object> parameters, SRCE )ι->up<IAwait> override;
+		α ExecuteNoLog( string sql, const vector<object>* params, RowΛ* f=nullptr, bool isStoredProc=false, SRCE )ε->uint override;
+		α ExecuteProcNoLog( string sql, vec<object> params, SRCE )ε->uint override;
+		α ExecuteProcCo( string sql, vector<object> params, RowΛ f, SRCE )ε->up<IAwait> override;
+		α ExecuteProcCo( string sql, vector<object> params, SRCE )ι->up<IAwait> override;
 		α SelectNoLog( string sql, RowΛ f, const vector<object>* pValues, SRCE )ε->uint override;
 
 	private:

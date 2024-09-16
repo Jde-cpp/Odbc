@@ -25,6 +25,8 @@ namespace Jde::DB::MsSql{
 					else if( start==string::npos && end==string::npos && dflt.size()>4 )//"((?))
 						defaultParsed = dflt.substr( 2, dflt.size()-4 );
 				}
+				else if( dataType==EType::Bit )
+					defaultParsed =  Ƒ("{}", dflt!="((0))" );
 			}
 			table.Columns[ordinalPosition-1] = Column{ name, (uint)ordinalPosition, defaultParsed, isNullable!="false", dataType, maxLength.value_or(0), isIdentity!=0, isId!=0, numericPrecision, numericScale };
 		};

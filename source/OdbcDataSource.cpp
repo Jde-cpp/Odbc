@@ -18,7 +18,7 @@ namespace Jde::DB::Odbc{
 
 	α AllocateBindings( const HandleStatement& statement,  SQLSMALLINT columnCount )ε->vector<up<Binding>>;
 
-	α ExecDirect( string cs, string sql, RowΛ* f, const vector<object>* pParams, SL sl, bool log=true )ε->uint{
+	α ExecDirect( string cs, string sql, const RowΛ* f, const vector<object>* pParams, SL sl, bool log=true )ε->uint{
 		HandleStatement statement{ move(cs) };
 		vector<SQLUSMALLINT> paramStatusArray;
 		vector<up<Binding>> parameters;
@@ -93,7 +93,7 @@ namespace Jde::DB::Odbc{
 	}
 
 	void OdbcDataSource::SetConnectionString( string x )ι{
-		_connectionString = Jde::format( "{};APP={}", move(x), IApplication::ApplicationName() );
+		_connectionString = Ƒ( "{};APP={}", move(x), Process::ApplicationName() );
 		DBG( "connectionString={}"sv, _connectionString );
 	}
 
@@ -122,16 +122,25 @@ namespace Jde::DB::Odbc{
 
 	α OdbcDataSource::Execute( string sql, SL sl )ε->uint{ return Select( sql, nullptr, nullptr, sl ); }
 	α OdbcDataSource::Execute( string sql, const vector<object>& parameters, SL sl)ε->uint{ return Execute(sql, &parameters, nullptr, false, sl); }
-	α OdbcDataSource::Execute( string sql, const vector<object>* pParameters, RowΛ* f, bool isStoredProc, SL sl )ε->uint{ return ExecDirect( CS(), sql, f, pParameters, sl );  }
+	α OdbcDataSource::Execute( string sql, const vector<object>* pParameters, const RowΛ* f, bool /*isStoredProc*/, SL sl )ε->uint{ return ExecDirect( CS(), sql, f, pParameters, sl );  }
 	α OdbcDataSource::ExecuteCo( string sql, vector<object> p, SL sl )ι->up<IAwait>{
 		return SelectCo( nullptr, move(sql), move(p), sl );
 	}
+	α OdbcDataSource::ExecuteCo( string sql_, vector<object> p, bool proc_, RowΛ f, SL sl )ε->up<IAwait>{
+		return mu<TPoolAwait<uint>>( [sql=move(sql_), params=move(p), sl, proc=proc_, func=f, this]()ε{
+			return mu<uint>( Execute(move(sql), &params, &func, proc, sl) );
+			}, "ExecuteCo", sl );
+	}
 	α OdbcDataSource::ExecuteNoLog( string sql, const vector<object>* p, RowΛ* f, bool, SL sl )ε->uint{ return ExecDirect( CS(),move(sql), f, p, sl, false );  }
-	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )ε->uint{ return ExecDirect( CS(), Jde::format("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
-	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, SL sl )ε->uint{ return ExecDirect( CS(), Jde::format("{{call {} }}", sql), nullptr, &parameters, sl); }
-	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, RowΛ f, SL sl )ε->uint{ return Select(Jde::format("{{call {} }}", move(sql)), f, &parameters, sl); }
+	α OdbcDataSource::ExecuteProcNoLog( string sql, vec<object> v, SL sl )ε->uint{ return ExecDirect( CS(), Ƒ("{{call {} }}", move(sql)), nullptr, &v, sl, false ); }
+	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, SL sl )ε->uint{ return ExecDirect( CS(), Ƒ("{{call {} }}", sql), nullptr, &parameters, sl); }
+	α OdbcDataSource::ExecuteProc( string sql, const vector<object>& parameters, RowΛ f, SL sl )ε->uint{ return Select(Ƒ("{{call {} }}", move(sql)), f, &parameters, sl); }
 	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> p, SL sl )ι->up<IAwait>{
-		return ExecuteCo(Jde::format("{{call {} }}", move(sql)), move(p), sl );
+		return ExecuteCo(Ƒ("{{call {} }}", move(sql)), move(p), sl );
+	}
+	
+	α OdbcDataSource::ExecuteProcCo( string sql, vector<object> params, RowΛ f, SL sl )ε->up<IAwait>{
+		return ExecuteCo( Ƒ("{{call {} }}", move(sql)), move(params), true, f, sl );
 	}
 
 	sp<ISchemaProc> OdbcDataSource::SchemaProc()ι{
@@ -143,8 +152,7 @@ namespace Jde::DB::Odbc{
 	α OdbcDataSource::SelectCo( ISelect* pAwait, string sql_, vector<object>&& params_, SL sl_ )ι->up<IAwait>{
 		return mu<TPoolAwait<uint>>( [cs=CS(),pAwait,sql=move(sql_),params=move(params_), sl=sl_]()->up<uint>{
 			uint y;
-			if( pAwait )
-			{
+			if( pAwait ){
 				function<void( const IRow& )> f = [pAwait](var& r){pAwait->OnRow(r);};
 				y = ExecDirect( cs, sql, &f, &params, sl );
 			}

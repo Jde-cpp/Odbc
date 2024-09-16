@@ -37,3 +37,4 @@ source/*.i
 source/packages/*
 Tests.Odbc.log
 test/packages/*
+**/.build/*

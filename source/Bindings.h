@@ -18,19 +18,19 @@ namespace Jde::DB::Odbc
 		β CodeType()Ι->SQLSMALLINT = 0;
 		β DBType()Ι->SQLSMALLINT = 0;
 
-		$ Bit( uint i )Ι->bool{ THROW( "{} not implemented for DBType={} CodeType={}", "bit", DBType(), CodeType() ); }
-		$ ToString( uint i )Ι->string{ THROW( "ToString not implemented for DBType='{}' CodeType='{}' {}", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
-		$ Int( uint i )Ι->int64_t{ THROW( "{} not implemented for DBType={} CodeType={}", "GetInt", DBType(), CodeType() ); }
-		$ Int32( uint i )Ι->int32_t{ THROW( "{} not implemented for DBType={} CodeType={}", "Int32", DBType(), CodeType() ); }
-		$ IntOpt( uint i )Ι->optional<_int>{ THROW( "{} not implemented for DBType={} CodeType={} {}", "IntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
-		$ Double( uint i )Ι->double{ THROW( "{} not implemented for DBType={} CodeType={}", "Double", DBType(), CodeType() ); }
+		$ Bit( uint )Ι->bool{ THROW( "{} not implemented for DBType={} CodeType={}", "bit", DBType(), CodeType() ); }
+		$ ToString( uint )Ι->string{ THROW( "ToString not implemented for DBType='{}' CodeType='{}' {}", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
+		$ Int( uint )Ι->int64_t{ THROW( "{} not implemented for DBType={} CodeType={}", "GetInt", DBType(), CodeType() ); }
+		$ Int32( uint )Ι->int32_t{ THROW( "{} not implemented for DBType={} CodeType={}", "Int32", DBType(), CodeType() ); }
+		$ IntOpt( uint )Ι->optional<_int>{ THROW( "{} not implemented for DBType={} CodeType={} {}", "IntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); }
+		$ Double( uint )Ι->double{ THROW( "{} not implemented for DBType={} CodeType={}", "Double", DBType(), CodeType() ); }
 		β GetFloat( uint i )Ι->float{ return static_cast<float>( Double(i) ); }
-		$ DoubleOpt( uint i )Ι->optional<double>{ THROW( "{} not implemented for DBType={} CodeType={}", "DoubleOpt", DBType(), CodeType() ); }
-		$ DateTime( uint i )Ι->DBTimePoint{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTime", DBType(), CodeType() ); }
-		$ DateTimeOpt( uint i )Ι->optional<DBTimePoint>{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTimeOpt", DBType(), CodeType()); }
-		$ UInt( uint i )Ι->uint{ THROW( "{} not implemented for DBType={} CodeType={}", "UInt", DBType(), CodeType()); }
+		$ DoubleOpt( uint )Ι->optional<double>{ THROW( "{} not implemented for DBType={} CodeType={}", "DoubleOpt", DBType(), CodeType() ); }
+		$ DateTime( uint )Ι->DBTimePoint{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTime", DBType(), CodeType() ); }
+		$ DateTimeOpt( uint )Ι->optional<DBTimePoint>{ THROW( "{} not implemented for DBType={} CodeType={}", "DateTimeOpt", DBType(), CodeType()); }
+		$ UInt( uint )Ι->uint{ THROW( "{} not implemented for DBType={} CodeType={}", "UInt", DBType(), CodeType()); }
 		//β GetUInt32(uint position )Ι->uint32_t{ return static_cast<uint32_t>(UInt()); }
-		$ UIntOpt( uint i )Ι->optional<uint>{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "UIntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); };
+		$ UIntOpt( uint )Ι->optional<uint>{ THROW( "{} not implemented for DBType={} CodeType={} - {}", "UIntOpt", DBType(), CodeType(), "GetTypeName<decltype(this)>()" ); };
 		α IsNull( uint i )Ι->bool{ return _output[i]==SQL_NULL_DATA; }
 		α Output( uint i )Ι->SQLLEN{ return _output[i]; }
 		α OutputPtr()ι->SQLLEN*{ return _output.get(); }
@@ -133,17 +133,14 @@ namespace Jde::DB::Odbc
 	////////////////////////////////////////////////////////////////////////////
 	#define base TBindings<SQL_NUMERIC_STRUCT,SQL_NUMERIC,SQL_C_NUMERIC>
 	#define var const auto
-	struct BindingNumerics : public base
-	{
+	struct BindingNumerics : public base{
 		BindingNumerics( uint rowCount )ι:base{ rowCount }{}
 		α Object( uint i )Ι->object override{ return object{ Double(i) }; }
-		α Double( uint i )Ι->double override//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
-		{ 
-			var data = _pBuffer[i];
+		α Double( uint index )Ι->double override{//https://docs.microsoft.com/en-us/sql/odbc/reference/appendixes/retrieve-numeric-data-sql-numeric-struct-kb222831?view=sql-server-ver15
+			var data = _pBuffer[index];
 			uint divisor = (uint)std::pow( 1, data.scale );
 			_int value = 0, last=1;
-			for( uint i=0; i<SQL_MAX_NUMERIC_LEN; ++i )
-			{
+			for( uint i=0; i<SQL_MAX_NUMERIC_LEN; ++i ){
 				const int current = data.val[i];
 				const int a = current % 16;
 				const int b = current / 16;

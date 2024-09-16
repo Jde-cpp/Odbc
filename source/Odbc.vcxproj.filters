@@ -56,7 +56,7 @@
     <ClInclude Include="OdbcDataSource.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Exports.h">
+    <ClInclude Include="exports.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="TypeDefs.h">

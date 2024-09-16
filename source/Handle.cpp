@@ -20,7 +20,7 @@ namespace Jde::DB::Odbc
 			SQLHENV handle;
 			var rc=SQLAllocHandle( SQL_HANDLE_ENV, SQL_NULL_HANDLE, &handle ); THROW_IF( rc==SQL_ERROR, "({}) - Unable to allocate an environment handle", rc );
 			CALL( handle, SQL_HANDLE_ENV, SQLSetEnvAttr(handle, SQL_ATTR_ODBC_VERSION, (SQLPOINTER)SQL_OV_ODBC3, 0), "SQLSetEnvAttr(SQL_ATTR_ODBC_VERSION)" );
-			_handle = sp<void>{ handle, [](SQLHENV h){} };
+			_handle = sp<void>{ handle, [](SQLHENV){} };
 		}
 	}
 
@@ -73,7 +73,7 @@ namespace Jde::DB::Odbc
 	HandleStatement::~HandleStatement(){
 		if( _handle )	{
 			if( var rc=SQLFreeHandle( SQL_HANDLE_STMT, _handle )!=SQL_SUCCESS )
-				WARNT( AppTag(), "SQLFreeHandle( SQL_HANDLE_STMT, {} ) returned {}"sv, _handle, rc );
+				Warning( ELogTags::App, "SQLFreeHandle( SQL_HANDLE_STMT, {} ) returned {}", _handle, rc );
 		}
 	}
 	HandleStatementAsync::~HandleStatementAsync()

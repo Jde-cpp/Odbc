@@ -1,9 +1,8 @@
-
 #include "TypeDefs.h"
 #if _MSC_VER
 //	#undef NTDDI_VERSION
 //	#define NTDDI_VERSION NTDDI_WIN10_RS1 // work around linker failure MapViewOfFileNuma2@36
-	#ifndef __INTELLISENSE__ 
+	#ifndef __INTELLISENSE__
 		#include	<windows.h>
 		#include <sqltypes.h>
 		#include <sql.h>
@@ -14,9 +13,9 @@
 	#include <sql.h>
 	#include <sqlext.h>
 #endif
-#pragma warning( disable : 4245) 
+#pragma warning( disable : 4245)
 #include <boost/crc.hpp>
-#pragma warning( default : 4245) 
+#pragma warning( default : 4245)
 #include <boost/noncopyable.hpp>
 #include <boost/system/error_code.hpp>
 #ifndef __INTELLISENSE__

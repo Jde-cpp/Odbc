@@ -1,7 +1,6 @@
 ﻿#include "Utilities.h"
 #include <sqlext.h>
 #include "../../Framework/source/db/DBException.h"
-#include <jde/Log.h>
 
 #define var const auto
 namespace Jde::DB::Odbc

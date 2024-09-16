@@ -1,20 +1,20 @@
-#pragma once
+﻿#pragma once
 
-#ifdef JDE_ODBC_EXPORTS
+#ifdef Jde_DB_Odbc_EXPORTS
 	#ifdef _MSC_VER
-		#define JDE_ODBC_VISIBILITY __declspec( dllexport )
+		#define ΓODBC __declspec( dllexport )
 	#else
-		#define JDE_ODBC_VISIBILITY __attribute__((visibility("default")))
+		#define ΓODBC __attribute__((visibility("default")))
 	#endif
 #else 
 	#ifdef _MSC_VER
-		#define JDE_ODBC_VISIBILITY __declspec( dllimport )
+		#define ΓODBC __declspec( dllimport )
 		#if NDEBUG
 			#pragma comment(lib, "Jde.DB.Odbc.lib")
 		#else
 			#pragma comment(lib, "Jde.DB.Odbc.lib")
 		#endif
 	#else
-		#define JDE_ODBC_VISIBILITY
+		#define ΓODBC
 	#endif
 #endif

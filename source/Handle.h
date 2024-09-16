@@ -1,5 +1,4 @@
 ﻿#pragma once
-#include <jde/Log.h>
 #include <boost/noncopyable.hpp>
 #include "Bindings.h"
 #include "../../Framework/source/Settings.h"
@@ -12,7 +11,7 @@ namespace Jde::DB::Odbc
 	struct HandleEnvironment final: boost::noncopyable
 	{
 		HandleEnvironment();
-		HandleEnvironment( HandleEnvironment&& rhs )ι{};
+		HandleEnvironment( HandleEnvironment&& )ι{};
 
 		operator SQLHENV()Ι{ return _handle.get(); }
 	private:

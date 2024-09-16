@@ -34,7 +34,7 @@
   <ItemGroup>
     <ClInclude Include="Binding.h" />
     <ClInclude Include="Bindings.h" />
-    <ClInclude Include="Exports.h" />
+    <ClInclude Include="exports.h" />
     <ClInclude Include="Handle.h" />
     <ClInclude Include="MsSql\MsSqlSchemaProc.h" />
     <ClInclude Include="MsSql\MsSqlStatements.h" />
