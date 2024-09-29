@@ -23,12 +23,10 @@ namespace Jde::DB::Odbc{
 		vector<SQLUSMALLINT> paramStatusArray;
 		vector<up<Binding>> parameters;
 		void* pData = nullptr;
-		if( pParams )
-		{
+		if( pParams ){
 			parameters.reserve( pParams->size() );
 			SQLUSMALLINT iParameter = 0;
-			for( var& param : *pParams )
-			{
+			for( var& param : *pParams ){
 				auto pBinding = Binding::Create( param );
 				pData = pBinding->Data();
 				var size = pBinding->Size(); var bufferLength = pBinding->BufferLength();
@@ -41,40 +39,33 @@ namespace Jde::DB::Odbc{
 			}
 		}
 		uint resultCount = 0;
-		if( log && DB::SqlTag()->Level==ELogLevel::Trace )
+		if( log )
 			DB::Log( sql, pParams, sl );
 		//DEBUG_IF( sql.find("call")!=string::npos );
 		var retCode = ::SQLExecDirect( statement, (SQLCHAR*)sql.data(), static_cast<SQLINTEGER>(sql.size()) );
-		switch( retCode )
-		{
+		switch( retCode ){
 		case SQL_NO_DATA://update with no records effected...
 			DBG( "noData={}", sql );
 		case SQL_SUCCESS_WITH_INFO:
-			try
-			{
+			try{
 				HandleDiagnosticRecord( "SQLExecDirect", statement, SQL_HANDLE_STMT, retCode );
 			}
-			catch( const DBException& e )
-			{
+			catch( const DBException& e ){
 				throw DBException{ retCode, sql, pParams, e.what(), sl };
 			}
-		case SQL_SUCCESS:
-		{
+		case SQL_SUCCESS:{
 			SQLSMALLINT columnCount=0;
 			if( f )
 				CALL( statement, SQL_HANDLE_STMT, SQLNumResultCols(statement,&columnCount), "SQLNumResultCols" );
-			if( columnCount>0 )
-			{
+			if( columnCount>0 ){
 				var bindings = AllocateBindings( statement, columnCount );
 				OdbcRow row{ bindings };
-				while( ::SQLFetch(statement)!=SQL_NO_DATA_FOUND )
-				{
+				while( ::SQLFetch(statement)!=SQL_NO_DATA_FOUND ){
 					row.Reset();
 					(*f)( row );
 				}
 			}
-			else
-			{
+			else{
 				SQLLEN count;
 				CALL( statement, SQL_HANDLE_STMT, SQLRowCount(statement,&count), "SQLRowCount" );
 				resultCount = count;
